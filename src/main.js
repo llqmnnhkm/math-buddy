@@ -11,7 +11,7 @@ const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;'
 const pick = a => a[Math.floor(Math.random() * a.length)];
 
 const AVATARS = ['🐱', '🐶', '🐰', '🐼', '🦊', '🐯', '🐸', '🐵', '🦁', '🐨', '🐧', '🐢'];
-const CHEERS = ['Great job!', 'Awesome!', 'You got it!', 'Super!', 'Well done!', 'Brilliant!', 'Hebat!'];
+const CHEERS = ['Great job!', 'Awesome!', 'You got it!', 'Super!', 'Well done!', 'Brilliant!', 'Fantastic!'];
 const OOPS = ['Oops, try again!', 'Almost! Try once more.', 'Not quite. You can do it!'];
 const BALLOON_COLORS = ['#ff6b6b', '#ffb703', '#6bcb77', '#4d96ff', '#c77dff', '#ff8fab'];
 

@@ -3,10 +3,13 @@ let on = (() => { try { return localStorage.getItem('mathbuddy:sound') !== 'off'
 const hasSpeech = typeof window !== 'undefined' && 'speechSynthesis' in window;
 let voice = null;
 
+// Only English voices are used. Preferred natural sounding voices first, then any English voice.
+const PREFERRED = [/Google UK English Female/i, /Samantha/i, /Karen/i, /Serena/i, /Libby|Sonia|Aria|Jenny/i, /Google US English/i];
 function pickVoice() {
-  const vs = speechSynthesis.getVoices();
-  voice = vs.find(v => /^en[-_](GB|US|AU)/i.test(v.lang) && /female|samantha|karen|google/i.test(v.name))
-    || vs.find(v => /^en/i.test(v.lang)) || null;
+  const en = speechSynthesis.getVoices().filter(v => /^en([-_]|$)/i.test(v.lang));
+  voice = null;
+  for (const re of PREFERRED) { voice = en.find(v => re.test(v.name)); if (voice) break; }
+  voice ||= en.find(v => /^en[-_]GB/i.test(v.lang)) || en.find(v => /^en[-_](US|AU)/i.test(v.lang)) || en[0] || null;
 }
 if (hasSpeech) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
 
@@ -24,7 +27,7 @@ export function speak(text) {
   if (!on || !hasSpeech || !text) return;
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(String(text).replace(/<[^>]+>/g, ' '));
-  u.lang = voice?.lang || 'en-GB';
+  u.lang = voice?.lang || 'en-GB'; // always English, even if the device language is Malay
   if (voice) u.voice = voice;
   u.rate = 0.9;
   u.pitch = 1.15;

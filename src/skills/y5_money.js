@@ -1,6 +1,6 @@
 import { rand, pick, shuffle, rm, withDistractors } from './util.js';
 
-// Money (KSSR Year 5, topic 3), set at a pasar malam stall. Prices are in sen.
+// Money (KSSR Year 5, topic 3), set at a night market stall. Prices are in sen.
 const FOOD = [
   ['roti canai', 150, '🫓'], ['teh tarik', 220, '🥤'], ['nasi lemak', 350, '🍛'],
   ['kuih', 80, '🍡'], ['air sirap', 180, '🧃'], ['ais kacang', 450, '🍧'],
@@ -11,7 +11,7 @@ const NAMES = ['Aiman', 'Mei Ling', 'Priya', 'Farah', 'Daniel', 'Siti', 'Arjun',
 export default {
   id: 'y5_money',
   mode: 'y5',
-  name: 'Pasar Malam',
+  name: 'Night Market',
   topic: 'Money',
   icon: '🛍️',
   hue: 160,
@@ -22,7 +22,7 @@ export default {
     const items = shuffle(FOOD).slice(0, count).map(([n, p, e]) => ({ n, p, e, q: level === 3 ? rand(1, 4) : 1 }));
     const total = items.reduce((s, it) => s + it.p * it.q, 0);
     const lines = items.map(it => `<div class="rline"><span>${it.e} ${it.q > 1 ? `${it.q} × ` : ''}${it.n}</span><span>${it.q > 1 ? `${it.q} × ` : ''}${rm(it.p)}</span></div>`).join('');
-    const receipt = `<div class="receipt"><div class="rhead">🏮 Pasar Malam</div>${lines}</div>`;
+    const receipt = `<div class="receipt"><div class="rhead">🏮 Night Market</div>${lines}</div>`;
     const opt = v => ({ html: rm(v), value: v });
     const near = v => [v + 10, v - 10, v + 50, v - 50, v + 100, v - 100, v + 20].filter(x => x > 0);
 

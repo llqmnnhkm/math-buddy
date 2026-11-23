@@ -44,7 +44,7 @@ Parent corner (behind a maths gate) → progress per child, reset, delete
 | Patterns (Pattern Train) | Planned |
 | More, less, same | Planned |
 | Comparing length and weight | Planned |
-| Malaysian coins (Kedai Runcit) | Planned |
+| Malaysian coins (Corner Shop) | Planned |
 
 ### Standard 5 (KSSR Year 5)
 
@@ -52,7 +52,7 @@ Parent corner (behind a maths gate) → progress per child, reset, delete
 |---|---|---|
 | 1. Whole numbers and operations | Speed Round, Round the Rocket | ✅ Done |
 | 2. Fractions, decimals and percentages | Pizza Fractions | ✅ Done |
-| 3. Money | Pasar Malam | ✅ Done |
+| 3. Money | Night Market | ✅ Done |
 | 4. Time | Time Travel (decades, centuries) | Planned |
 | 5. Measurement (length, mass, volume) | Planned | Planned |
 | 6. Space (angles, polygons, perimeter, area, volume) | Planned | Planned |
@@ -77,7 +77,7 @@ This keeps children winning about 80% of the time.
 * **Hints, not failure:** after 2 wrong tries, show the explanation and highlight the answer
 * **Rewards:** stars, a sticker book (10 stars per sticker), badges
 * **Daily streak:** forgiving, so one missed day does not reset it
-* **Local context:** pasar malam, roti canai, teh tarik, ringgit and sen, Malaysian names
+* **Local context:** night market food like roti canai, teh tarik, ringgit and sen, Malaysian names
 
 ## Data model (localStorage, key `mathbuddy:v1`)
 

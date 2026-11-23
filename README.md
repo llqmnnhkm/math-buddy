@@ -10,7 +10,7 @@ It is an offline first PWA with no login. Progress is saved on the device, and i
 ## Features
 
 * Two modes with their own look, picked per child profile
-* 8 games: Count With Me, Pop the Balloon, Add It Up, Shape Hunt, Speed Round, Round the Rocket, Pizza Fractions, Pasar Malam
+* 8 games: Count With Me, Pop the Balloon, Add It Up, Shape Hunt, Speed Round, Round the Rocket, Pizza Fractions, Night Market
 * Questions are generated on the fly, so practice never runs out
 * Adaptive levels (1 to 3): up after 4 of the last 5 correct, down after 2 wrong in a row
 * Read aloud for every question (Web Speech API), plus sound effects made with Web Audio (no audio files)
