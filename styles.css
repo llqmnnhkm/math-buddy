@@ -233,6 +233,16 @@ th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #eee9f5; w
 th { color: var(--muted); font-size: 0.85rem; }
 td .mbar { background: #eee9f5; width: 90px; }
 
+/* ---------- Confirm dialog ---------- */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center;
+  padding: 20px; background: rgba(45, 42, 50, 0.45);
+}
+.modal { max-width: 420px; width: 100%; text-align: center; animation: popIn 0.25s; }
+.modal h2 { margin-top: 4px; }
+.modal p { line-height: 1.5; }
+.modal-step { font-size: 0.85rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
 /* ---------- Update banner ---------- */
 .update-banner {
   display: block; width: 100%; text-align: left;

@@ -25,6 +25,7 @@ function show(html, mode = '', keep = false) {
   if (!keep) { gen++; playing = false; }
   if (cleanup) { cleanup(); cleanup = null; }
   stopSpeech();
+  if (!keep) document.querySelectorAll('.confetti').forEach(c => c.remove());
   document.body.className = mode ? `mode-${mode}` : '';
   app.innerHTML = html;
   window.scrollTo(0, 0);
@@ -452,7 +453,8 @@ function parentCard(p) {
     .filter(([, s]) => s.attempts > 0)
     .map(([id, s]) => ({ sk: getSkill(id), s }))
     .filter(x => x.sk);
-  const weak = played.filter(x => x.s.attempts >= 5 && x.s.mastery < 60).sort((a, b) => a.s.mastery - b.s.mastery)[0];
+  const acc = s => s.correct / s.attempts;
+  const weak = played.filter(x => x.s.attempts >= 5 && acc(x.s) < 0.7).sort((a, b) => acc(a.s) - acc(b.s))[0];
   const week = p.sessions.filter(s => Date.now() - s.at < 7 * 864e5);
   const weekStars = week.reduce((a, s) => a + s.stars, 0);
   const modeName = p.mode === 'pre' ? 'Little Learners' : p.mode === 'y5' ? 'Standard 5' : 'No mode yet';
@@ -495,19 +497,51 @@ function parent() {
   $('#home').onclick = home;
   $('#sound').onclick = () => { setSound(!soundOn()); parent(); };
   $$('[data-act]').forEach(b => b.onclick = () => {
-    if (!b.dataset.armed) { b.dataset.armed = '1'; b.textContent = 'Tap again to confirm'; return; }
-    if (b.dataset.act === 'reset') db.resetProfile(b.dataset.id);
-    else db.deleteProfile(b.dataset.id);
-    parent();
+    const p = db.profiles.find(x => x.id === b.dataset.id);
+    if (!p) return;
+    const name = esc(p.name);
+    const isReset = b.dataset.act === 'reset';
+    const what = isReset
+      ? `This will erase all of ${name}'s stars, stickers, badges, levels and streak. ${name} will stay as a player.`
+      : `This will remove ${name} and all of their progress from this device.`;
+    confirmTwice({
+      title1: isReset ? `Reset ${name}'s progress?` : `Delete ${name}?`,
+      body1: what,
+      title2: 'Are you sure?',
+      body2: "This can't be undone.",
+      yes: isReset ? 'Yes, reset everything' : 'Yes, delete player',
+      onConfirm: () => {
+        if (isReset) db.resetProfile(p.id); else db.deleteProfile(p.id);
+        parent();
+      },
+    });
   });
 }
 
-/* ---------- Helpers and start up ---------- */
-
-function shake(el) {
-  el.classList.remove('shake');
-  void el.offsetWidth;
-  el.classList.add('shake');
+// Two step confirmation for anything that erases progress.
+function confirmTwice({ title1, body1, title2, body2, yes, onConfirm }) {
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  const step = n => {
+    overlay.innerHTML = `<div class="modal card" role="dialog" aria-modal="true">
+      <div class="modal-step">Step ${n} of 2</div>
+      <h2>${n === 1 ? title1 : title2}</h2>
+      <p>${n === 1 ? body1 : body2}</p>
+      <div class="row">
+        <button class="btn alt small" data-m="cancel">Cancel</button>
+        <button class="btn danger small" data-m="ok">${n === 1 ? 'Continue' : yes}</button>
+      </div>
+    </div>`;
+    overlay.querySelector('[data-m=cancel]').onclick = close;
+    overlay.querySelector('[data-m=ok]').onclick = () => {
+      if (n === 1) step(2);
+      else { close(); onConfirm(); }
+    };
+  };
+  overlay.onclick = e => { if (e.target === overlay) close(); };
+  step(1);
 }
 
 /* ---------- Updates ---------- */
