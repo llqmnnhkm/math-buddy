@@ -8,6 +8,7 @@ import {
 } from './engine.js';
 import { CREATURES, creature, silhouette, eggSvg, BOSSES, bossSvg } from './creatures.js';
 import { numChoices, fmtNum } from './skills/util.js';
+import { columnForm } from './column.js';
 import { icon } from './icons.js';
 import { animal, ANIMAL_IDS, sticker } from './art.js';
 
@@ -363,21 +364,22 @@ function runSpeed(skill, p) {
       ${mascot('Answer as many as you can in 60 seconds. Ready?', 'small')}
       <button class="btn" id="start">Start! ${icon('lightning')}</button>
     </div>
-    <div class="answer" id="ans"></div>
+    <div class="col-note" id="note"></div>
     <div class="numpad">${['1', '2', '3', '4', '5', '6', '7', '8', '9', 'del', '0', 'ok'].map(k => `<button data-k="${k}" class="${k === 'ok' ? 'ok' : ''}" aria-label="${k === 'del' ? 'Delete' : k === 'ok' ? 'Check answer' : k}">${k === 'del' ? icon('backspace') : k === 'ok' ? icon('check-fill') : k}</button>`).join('')}</div>
   </div>`, p.mode, true);
   bindQuit();
 
   let score = 0, wrongN = 0, input = '', q = null, running = false, lock = false, timer = null, end = 0;
   const combo = comboTracker();
-  const ansEl = $('#ans'), qEl = $('#q');
+  const qEl = $('#q');
+  let ansEl = null;
 
   const newQ = () => {
     q = skill.generate(db.skill(p, skill.id).level);
-    qEl.innerHTML = `<div class="qtext">${q.prompt}</div>`;
+    qEl.innerHTML = columnForm(q.col, '', 'ans');
+    ansEl = $('#ans');
     input = '';
-    ansEl.textContent = '';
-    ansEl.className = 'answer';
+    $('#note').textContent = '';
   };
   const submit = () => {
     if (!running || lock || input === '') return;
@@ -395,7 +397,8 @@ function runSpeed(skill, p) {
       wrongN++;
       sfx('wrong');
       ansEl.classList.add('bad');
-      ansEl.innerHTML = `<s>${esc(input)}</s> ${q.answer}`;
+      ansEl.textContent = fmtNum(q.answer);
+      $('#note').innerHTML = `You wrote <s>${esc(fmtNum(input))}</s>. The answer is <b>${fmtNum(q.answer)}</b>.`;
       later(() => { lock = false; if (running) newQ(); }, 1000);
     }
   };
@@ -404,7 +407,7 @@ function runSpeed(skill, p) {
     if (k === 'del') input = input.slice(0, -1);
     else if (k === 'ok') return submit();
     else if (input.length < 7) input += k;
-    ansEl.textContent = input;
+    ansEl.textContent = input ? fmtNum(input) : '';
     sfx('tap');
   };
   $$('.numpad button').forEach(b => b.onclick = () => key(b.dataset.k));
@@ -523,7 +526,7 @@ function bossQuestion(skill) {
   if (q.numbers) return { ...q, choices: q.numbers, choiceClass: 'big' };
   const spread = Math.max(3, Math.round(q.answer * 0.1));
   const choices = numChoices(q.answer, 4, spread, 0).map(n => ({ html: fmtNum(n), value: n }));
-  return { ...q, choices, explanation: `The answer is ${fmtNum(q.answer)}.` };
+  return { ...q, choices, explanation: q.explanation || `The answer is ${fmtNum(q.answer)}.` };
 }
 
 function bossBattle(id) {

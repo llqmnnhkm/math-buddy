@@ -224,7 +224,30 @@ input:focus { border-color: var(--accent); }
 .score { font-weight: 800; font-size: 1.2rem; display: flex; justify-content: center; gap: 18px; }
 .score b { color: var(--accent); font-size: 1.5rem; }
 .question { min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.qtext { font-size: clamp(2rem, 8vw, 3.2rem); font-weight: 900; }
+/* Bentuk lazim (column method) */
+.colform {
+  position: relative; display: inline-block; width: var(--w); min-width: 4ch; margin: 6px auto 0;
+  font-size: clamp(2.2rem, 9vw, 3rem); font-weight: 900; line-height: 1.25;
+  font-variant-numeric: tabular-nums; text-align: right; box-sizing: content-box; padding: 0 0.15em;
+}
+.col-row { white-space: pre; min-height: 1.25em; }
+.col-op { position: absolute; left: 0; color: var(--accent); }
+.col-line { border-top: 4px solid var(--ink); margin: 4px -0.15em; }
+.col-line.double { border-top-width: 0; border-bottom: 3px double var(--ink); height: 4px; margin-top: 2px; }
+.col-ans { color: var(--accent); min-height: 1.25em; }
+.col-ans.ok { color: var(--good); }
+.col-ans.bad { color: var(--bad); }
+.colform.div { display: inline-grid; grid-template-columns: auto auto; width: auto; align-items: end; }
+.colform.div .col-ans { text-align: right; padding-right: 0.2em; padding-left: 0.4em; border-bottom: 4px solid var(--ink); white-space: pre; }
+.div-b { padding-right: 0.25em; }
+.div-a { position: relative; padding: 0.05em 0.2em 0 0.55em; text-align: right; white-space: pre; }
+.div-a::before {
+  content: ""; position: absolute; left: 0; top: -2px; bottom: 0.1em; width: 0.35em;
+  border-right: 4px solid var(--ink); border-radius: 0 60% 60% 0 / 0 50% 50% 0;
+}
+.col-note { min-height: 1.6em; font-weight: 700; color: var(--muted); margin: 4px 0 10px; }
+.col-note s { color: var(--bad); }
+.speed .question { min-height: 220px; }
 .answer { height: 64px; max-width: 320px; margin: 4px auto 14px; border-radius: 16px; background: var(--card); box-shadow: inset 0 3px 0 rgba(0, 0, 0, 0.06); font-size: 2.2rem; font-weight: 900; line-height: 64px; }
 .answer.ok { background: #c9f5dd; }
 .answer.bad { background: #ffe0e0; }

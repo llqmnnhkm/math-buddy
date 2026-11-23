@@ -1,6 +1,7 @@
 import { rand, pick, fmtNum } from './util.js';
+import { columnForm } from '../column.js';
 
-// Whole numbers and basic operations (KSSR Year 5, topic 1).
+// Whole numbers and basic operations (KSSR Year 5, topic 1), shown in bentuk lazim.
 export default {
   id: 'y5_speed',
   mode: 'y5',
@@ -29,6 +30,15 @@ export default {
       const c = level === 2 ? rand(2, 12) : rand(11, 99);
       a = b * c; ans = c; sym = '÷';
     }
-    return { prompt: `${fmtNum(a)} ${sym} ${fmtNum(b)} = ?`, answer: ans };
+    const col = { a, b, op };
+    return {
+      prompt: 'Solve it!',
+      speak: `${a} ${{ add: 'plus', sub: 'minus', mul: 'times', div: 'divided by' }[op]} ${b}`,
+      text: `${fmtNum(a)} ${sym} ${fmtNum(b)}`,
+      col,
+      visual: columnForm(col, '?'), // used by the boss battle
+      answer: ans,
+      explanation: `${fmtNum(a)} ${sym} ${fmtNum(b)} = ${fmtNum(ans)}.`,
+    };
   },
 };
