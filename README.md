@@ -15,6 +15,10 @@ It is an offline first PWA with no login. Progress is saved on the device, and i
 * Adaptive levels (1 to 3): up after 4 of the last 5 correct, down after 2 wrong in a row
 * Read aloud for every question (Web Speech API), plus sound effects made with Web Audio (no audio files)
 * Stars, a sticker book, badges, a forgiving daily streak and confetti
+* **Mystery eggs:** every round cracks the egg; it hatches into one of 12 original creatures to collect
+* **Combo meter:** 3 right in a row turns on x2 (bonus stars); every 5 in a row Kiko dances
+* **Boss battles:** reach level 3 on an island to fight its boss (3 hearts, win a trophy and 15 stars)
+* **Kiko's Closet:** spend stars on hats, glasses, neckwear and backgrounds for Kiko
 * Hints after 2 wrong tries, with the correct answer highlighted
 * No emoji: hand drawn SVG art in Kiko's style (avatars, counting items, stickers), ten frame counters for counting and adding, and Phosphor line icons for the interface
 * Parent corner behind a simple maths gate: progress per skill, weekly summary, reset and delete
@@ -53,6 +57,7 @@ src/
   audio.js        Read aloud and sound effects
   fx.js           Kiko mascot and confetti
   art.js          Drawn animals, counting items, ten frames, stickers
+  creatures.js    Hatchable creatures, eggs and island bosses
   icons.js        Bundled Phosphor icons (MIT)
   skills/         One file per skill (question generator)
 docs/PLAN.md      Product plan, curriculum map and roadmap

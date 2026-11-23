@@ -97,5 +97,6 @@ current: active profile id
 3. Remaining Little Learners skills (patterns, sorting, coins, comparing)
 4. Remaining Standard 5 topics (time, measurement, space, coordinates, data)
 5. More game types: drag and drop, Pattern Train, Treasure Map grid, Boss Battle
-6. Mascot outfits shop, 2 player "Challenge a parent" mode
-7. Optional Laravel + Filament backend for accounts and sync
+6. ✅ Mystery eggs, combo meter, boss battles, Kiko's Closet
+7. 2 player "Race a parent" mode
+8. Optional Laravel + Filament backend for accounts and sync

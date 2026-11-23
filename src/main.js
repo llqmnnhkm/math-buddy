@@ -1,8 +1,13 @@
-import { db, save } from './db.js';
+import { db, save, upgradeProfile } from './db.js';
 import { speak, sfx, setSound, soundOn, stopSpeech } from './audio.js';
-import { mascot, mascotSay, confetti } from './fx.js';
+import { mascot, mascotSay, confetti, setOutfit, kikoSvg, OUTFITS, SLOTS } from './fx.js';
 import { skillsFor, getSkill } from './skills/index.js';
-import { record, finishSession, buySticker, STICKERS, STICKER_COST, BADGES, MAX_LEVEL } from './engine.js';
+import {
+  record, finishSession, buySticker, STICKERS, STICKER_COST, BADGES, MAX_LEVEL,
+  hatchEgg, eggReady, finishBoss, buyOutfit, toggleOutfit,
+} from './engine.js';
+import { CREATURES, creature, silhouette, eggSvg, BOSSES, bossSvg } from './creatures.js';
+import { numChoices, fmtNum } from './skills/util.js';
 import { icon } from './icons.js';
 import { animal, ANIMAL_IDS, sticker } from './art.js';
 
@@ -31,6 +36,7 @@ function show(html, mode = '', keep = false) {
   stopSpeech();
   if (!keep) document.querySelectorAll('.confetti').forEach(c => c.remove());
   document.body.className = mode ? `mode-${mode}` : '';
+  setOutfit(db.current()?.outfit);
   app.innerHTML = html;
   window.scrollTo(0, 0);
   refreshUpdateBanner();
@@ -53,6 +59,7 @@ function home() {
   $$('.profile-card[data-id]').forEach(b => b.onclick = () => {
     sfx('tap');
     db.setCurrent(b.dataset.id);
+    setOutfit(db.current().outfit);
     db.current().mode ? map() : modeSelect();
   });
   $('#add').onclick = () => createProfile(false);
@@ -125,25 +132,45 @@ function map() {
   if (!p.mode) return modeSelect();
   const list = skillsFor(p.mode);
   const hello = p.mode === 'pre' ? `Pick a game, ${esc(p.name)}!` : `Choose an island to explore, ${esc(p.name)}!`;
-  show(`${topbar(p, `<button class="icon-btn" id="stickers" aria-label="Sticker book">${icon('sticker')}</button><button class="icon-btn" id="sound" aria-label="Sound">${icon(soundOn() ? 'speaker-high' : 'speaker-slash')}</button>`)}
+  setOutfit(p.outfit);
+  const ready = eggReady(p);
+  const left = p.egg.need - p.egg.cracks;
+  show(`${topbar(p, `<button class="icon-btn" id="closet" aria-label="Kiko's closet">${icon('coat-hanger')}</button><button class="icon-btn" id="stickers" aria-label="My collection">${icon('sticker')}</button><button class="icon-btn" id="sound" aria-label="Sound">${icon(soundOn() ? 'speaker-high' : 'speaker-slash')}</button>`)}
   <div class="screen">
     ${mascot(hello)}
+    <button class="egg-card ${ready ? 'ready' : ''}" id="egg">
+      <span class="egg-mini">${eggSvg(p.egg.cracks, p.egg.need)}</span>
+      <span class="egg-text"><b>${ready ? 'Your egg is ready to hatch!' : 'Mystery egg'}</b>
+      <small>${ready ? 'Tap to hatch it' : `${left} more ${left === 1 ? 'round' : 'rounds'} to hatch`}</small></span>
+      <span class="egg-count">${icon('egg-crack')} ${p.creatures.length}/${CREATURES.length}</span>
+    </button>
     <div class="island-grid">
       ${list.map(s => {
         const st = db.skill(p, s.id);
-        return `<button class="island" data-id="${s.id}" style="--hue:${s.hue}">
-          <span class="island-icon">${icon(s.icon)}</span>
-          <span class="island-name">${s.name}</span>
-          <span class="island-topic">${s.topic}</span>
-          <span class="lvl">${'●'.repeat(st.level)}${'○'.repeat(MAX_LEVEL - st.level)} Level ${st.level}</span>
-          <span class="mbar"><i style="width:${st.mastery}%"></i></span>
-        </button>`;
+        const bossOpen = st.level >= MAX_LEVEL || p.trophies[s.id];
+        const won = p.trophies[s.id];
+        return `<div class="island-wrap" style="--hue:${s.hue}">
+          <button class="island" data-id="${s.id}">
+            ${won ? `<span class="island-trophy" title="Boss beaten">${icon('trophy-fill', 'trophy')}</span>` : ''}
+            <span class="island-icon">${icon(s.icon)}</span>
+            <span class="island-name">${s.name}</span>
+            <span class="island-topic">${s.topic}</span>
+            <span class="lvl">${'●'.repeat(st.level)}${'○'.repeat(MAX_LEVEL - st.level)} Level ${st.level}</span>
+            <span class="mbar"><i style="width:${st.mastery}%"></i></span>
+          </button>
+          ${bossOpen
+            ? `<button class="boss-btn" data-boss="${s.id}">${icon('sword')} ${won ? 'Rematch' : 'Boss battle!'}</button>`
+            : `<div class="boss-btn locked">${icon('lock-simple-fill')} Boss at level ${MAX_LEVEL}</div>`}
+        </div>`;
       }).join('')}
     </div>
     <button class="link" id="switch">Switch to ${p.mode === 'pre' ? 'Standard 5' : 'Little Learners'}</button>
   </div>`, p.mode);
   $('#home').onclick = home;
   $('#stickers').onclick = stickerBook;
+  $('#closet').onclick = () => closet();
+  $('#egg').onclick = () => (eggReady(p) ? hatchScreen() : mascotSay(`Finish ${left} more ${left === 1 ? 'round' : 'rounds'} and your egg will hatch!`, 'happy'));
+  $$('.boss-btn[data-boss]').forEach(b => b.onclick = () => { sfx('tap'); bossBattle(b.dataset.boss); });
   $('#sound').onclick = () => { setSound(!soundOn()); map(); };
   $('#switch').onclick = () => { db.setMode(p, p.mode === 'pre' ? 'y5' : 'pre'); map(); };
   $$('.island').forEach(b => b.onclick = () => { sfx('tap'); play(b.dataset.id); });
@@ -163,8 +190,38 @@ function play(id) {
 const progressBar = (skill, i, total) => `<header class="topbar">
   <button class="icon-btn" id="quit" aria-label="Quit">${icon('x')}</button>
   <div class="dots">${Array.from({ length: total }, (_, k) => `<i class="${k < i ? 'done' : k === i ? 'now' : ''}"></i>`).join('')}</div>
+  <div class="combo" id="combo" hidden></div>
   <div class="who skill-ic">${icon(skill.icon)}</div>
 </header>`;
+
+/**
+ * Combo meter: 3 right in a row on the first try turns on x2 (one bonus star per answer).
+ * Every 5 in a row Kiko does a dance.
+ */
+function comboTracker() {
+  let run = 0, bonus = 0, best = 0;
+  const render = (bump = false) => {
+    const el = document.getElementById('combo');
+    if (!el) return;
+    el.hidden = run < 3;
+    el.innerHTML = `${icon('fire-fill', 'fire')} x2 <small>${run} in a row</small>`;
+    if (bump) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+  };
+  return {
+    render,
+    hit(ok) {
+      if (!ok) { run = 0; render(); return; }
+      run++;
+      best = Math.max(best, run);
+      if (run >= 3) bonus++;
+      render(true);
+      if (run % 5 === 0) { sfx('combo'); mascotSay(`${run} in a row! You're on fire!`, 'dance'); }
+      else if (run === 3) { sfx('combo'); mascotSay('3 in a row! Combo x2!', 'happy'); }
+    },
+    get bonus() { return bonus; },
+    get best() { return best; },
+  };
+}
 
 const bindQuit = () => { $('#quit').onclick = map; };
 
@@ -189,8 +246,9 @@ function levelNote(p, change) {
 function runChoice(skill, p) {
   const total = p.mode === 'pre' ? 5 : 10;
   let i = 0, first = 0;
+  const combo = comboTracker();
   const next = () => {
-    if (i >= total) return result(skill, p, { correct: first, total });
+    if (i >= total) return result(skill, p, { correct: first, total, bonus: combo.bonus, bestCombo: combo.best });
     const q = skill.generate(db.skill(p, skill.id).level);
     let wrong = 0, done = false;
     show(`${progressBar(skill, i, total)}
@@ -203,6 +261,7 @@ function runChoice(skill, p) {
       <div class="hint" id="hint" hidden></div>
     </div>`, p.mode, true);
     bindQuit();
+    combo.render();
     speak(q.speak || q.prompt);
     const isRight = c => String(c.value ?? c) === String(q.answer);
     $$('.choice').forEach(b => b.onclick = () => {
@@ -216,6 +275,7 @@ function runChoice(skill, p) {
         const change = record(p, skill.id, !wrong);
         cheer(p);
         levelNote(p, change);
+        combo.hit(!wrong);
         i++;
         later(next, wrong >= 2 ? 2600 : 1200);
       } else {
@@ -223,6 +283,7 @@ function runChoice(skill, p) {
         b.classList.add('wrong');
         b.disabled = true;
         sfx('wrong');
+        if (wrong === 1) combo.hit(false);
         mascotSay(pick(OOPS), 'oops');
         if (wrong === 2) {
           showHint(q);
@@ -238,8 +299,9 @@ function runChoice(skill, p) {
 function runBalloon(skill, p) {
   const total = 5;
   let i = 0, first = 0;
+  const combo = comboTracker();
   const next = () => {
-    if (i >= total) return result(skill, p, { correct: first, total });
+    if (i >= total) return result(skill, p, { correct: first, total, bonus: combo.bonus, bestCombo: combo.best });
     const q = skill.generate(db.skill(p, skill.id).level);
     let wrong = 0, done = false;
     show(`${progressBar(skill, i, total)}
@@ -251,6 +313,7 @@ function runBalloon(skill, p) {
       <div class="hint" id="hint" hidden></div>
     </div>`, p.mode, true);
     bindQuit();
+    combo.render();
     speak(q.speak || q.prompt);
     $$('.balloon').forEach(b => b.onclick = () => {
       if (done || b.classList.contains('pop')) return;
@@ -263,6 +326,7 @@ function runBalloon(skill, p) {
         const change = record(p, skill.id, !wrong);
         cheer(p);
         levelNote(p, change);
+        combo.hit(!wrong);
         i++;
         later(next, 1300);
       } else {
@@ -271,6 +335,7 @@ function runBalloon(skill, p) {
         void b.offsetWidth;
         b.classList.add('wobble');
         sfx('wrong');
+        if (wrong === 1) combo.hit(false);
         mascotSay(pick(OOPS), 'oops');
         if (wrong === 2) {
           showHint(q);
@@ -288,6 +353,7 @@ function runSpeed(skill, p) {
   show(`<header class="topbar">
     <button class="icon-btn" id="quit" aria-label="Quit">${icon('x')}</button>
     <div class="who"><span class="skill-ic">${icon(skill.icon)}</span> ${skill.name}</div>
+    <div class="combo" id="combo" hidden></div>
     <div class="pill" title="Best score">${icon('trophy-fill', 'trophy')} ${best}</div>
   </header>
   <div class="screen play speed">
@@ -303,6 +369,7 @@ function runSpeed(skill, p) {
   bindQuit();
 
   let score = 0, wrongN = 0, input = '', q = null, running = false, lock = false, timer = null, end = 0;
+  const combo = comboTracker();
   const ansEl = $('#ans'), qEl = $('#q');
 
   const newQ = () => {
@@ -316,6 +383,7 @@ function runSpeed(skill, p) {
     if (!running || lock || input === '') return;
     const ok = Number(input) === q.answer;
     record(p, skill.id, ok);
+    combo.hit(ok);
     lock = true;
     if (ok) {
       score++;
@@ -359,7 +427,7 @@ function runSpeed(skill, p) {
       if (left <= 0) {
         running = false;
         clearInterval(timer);
-        result(skill, p, { correct: score, total: score + wrongN, speed: true });
+        result(skill, p, { correct: score, total: score + wrongN, speed: true, bonus: combo.bonus, bestCombo: combo.best });
       }
     }, 100);
   };
@@ -378,6 +446,8 @@ function result(skill, p, r) {
     <div class="rating">${[1, 2, 3].map(k => `<span class="${k <= out.rating ? 'on' : ''}" style="animation-delay:${k * 0.25}s">${icon('star-fill')}</span>`).join('')}</div>
     <p class="big">${r.speed ? `${r.correct} correct in 60 seconds!` : `${r.correct} of ${r.total} right on the first try`}</p>
     <p class="earned">+${out.stars} ${STAR}</p>
+    ${out.bonus ? `<p class="bonus-line">${icon('fire-fill', 'fire')} Includes +${out.bonus} combo bonus</p>` : ''}
+    ${eggLine(out.egg)}
     ${out.newBest ? `<div class="badge-new">${icon('trophy-fill', 'trophy')} New best score!</div>` : ''}
     ${out.newBadges.map(b => `<div class="badge-new">${icon(b.icon)} New badge: <b>${b.name}</b></div>`).join('')}
     <div class="row">
@@ -387,19 +457,245 @@ function result(skill, p, r) {
   </div>`, p.mode);
   $('#again').onclick = () => play(skill.id);
   $('#map').onclick = map;
+  $('#hatch')?.addEventListener('click', hatchScreen);
   sfx('win');
   confetti();
   speak(msg);
+}
+
+function eggLine(egg) {
+  if (egg.ready) {
+    return `<div class="egg-line ready"><span class="egg-mini">${eggSvg(egg.cracks, egg.need)}</span>
+      <div><b>Your egg is ready to hatch!</b><button class="btn small" id="hatch">${icon('egg-crack')} Hatch it!</button></div></div>`;
+  }
+  const left = egg.need - egg.cracks;
+  return `<div class="egg-line"><span class="egg-mini">${eggSvg(egg.cracks, egg.need)}</span>
+    <div><b>Your egg cracked a little!</b><small>${left} more ${left === 1 ? 'round' : 'rounds'} to hatch.</small></div></div>`;
+}
+
+/* ---------- Hatching ---------- */
+
+function hatchScreen() {
+  const p = db.current();
+  if (!eggReady(p)) return map();
+  let taps = 0;
+  const need = 3;
+  show(`<div class="screen center hatch">
+    ${mascot('Tap the egg to hatch it!')}
+    <button class="hatch-egg" id="egg" aria-label="Tap the egg">${eggSvg(p.egg.need, p.egg.need)}</button>
+    <p class="muted">Tap ${need} times</p>
+  </div>`, p.mode);
+  speak('Tap the egg to hatch it!');
+  $('#egg').onclick = () => {
+    taps++;
+    const egg = $('#egg');
+    egg.classList.remove('shake-egg');
+    void egg.offsetWidth;
+    egg.classList.add('shake-egg');
+    sfx(taps < need ? 'tap' : 'hatch');
+    if (taps < need) { mascotSay(taps === 1 ? 'Something is moving!' : 'Almost there!', 'happy'); return; }
+    const out = hatchEgg(p);
+    const c = out.creature;
+    show(`<div class="screen center hatch">
+      <div class="hatched">${creature(c.id)}</div>
+      <h1 class="title">Meet ${c.name}!</h1>
+      <p class="big">${out.complete ? `You found every creature! +${out.extraStars} bonus stars.` : `${c.name} joined your collection.`}</p>
+      <p class="muted">${p.creatures.length} of ${CREATURES.length} creatures found. A new egg is waiting!</p>
+      ${out.newBadges.map(b => `<div class="badge-new">${icon(b.icon)} New badge: <b>${b.name}</b></div>`).join('')}
+      <div class="row">
+        <button class="btn" id="coll">${icon('egg-crack')} My creatures</button>
+        <button class="btn alt" id="map">${icon('map-trifold')} Back to map</button>
+      </div>
+    </div>`, p.mode);
+    confetti();
+    speak(`Meet ${c.name}!`);
+    $('#coll').onclick = stickerBook;
+    $('#map').onclick = map;
+  };
+}
+
+/* ---------- Boss battles ---------- */
+
+// Turn any question into tap-to-answer choices, so every island can have a boss.
+function bossQuestion(skill) {
+  const q = skill.generate(MAX_LEVEL);
+  if (q.choices) return q;
+  if (q.numbers) return { ...q, choices: q.numbers, choiceClass: 'big' };
+  const spread = Math.max(3, Math.round(q.answer * 0.1));
+  const choices = numChoices(q.answer, 4, spread, 0).map(n => ({ html: fmtNum(n), value: n }));
+  return { ...q, choices, explanation: `The answer is ${fmtNum(q.answer)}.` };
+}
+
+function bossBattle(id) {
+  const skill = getSkill(id);
+  const p = db.current();
+  const boss = BOSSES[id];
+  const maxHp = p.mode === 'pre' ? 5 : 8;
+  let hp = maxHp, hearts = 3, asked = 0, right = 0;
+  gen++;
+  playing = true;
+
+  const bar = () => `<header class="topbar boss-top">
+    <button class="icon-btn" id="quit" aria-label="Quit">${icon('x')}</button>
+    <div class="hearts" aria-label="${hearts} hearts left">${[1, 2, 3].map(k => icon(k <= hearts ? 'heart-fill' : 'heart', k <= hearts ? 'heart on' : 'heart')).join('')}</div>
+    <div class="who">${icon('sword')} Boss</div>
+  </header>`;
+
+  const intro = () => {
+    show(`${bar()}<div class="screen center boss-intro">
+      <div class="boss-art big">${bossSvg(id)}</div>
+      <h1 class="title">${boss.name}</h1>
+      <p class="big">Answer ${maxHp} questions right to win. You have 3 hearts!</p>
+      <button class="btn" id="fight">${icon('sword')} Let's battle!</button>
+    </div>`, p.mode, true);
+    bindQuit();
+    speak(`${boss.name} wants to battle! Answer ${maxHp} questions right to win.`);
+    $('#fight').onclick = next;
+  };
+
+  const next = () => {
+    if (hp <= 0) return end(true);
+    if (hearts <= 0) return end(false);
+    const q = bossQuestion(skill);
+    asked++;
+    let done = false;
+    show(`${bar()}<div class="screen play">
+      <div class="boss-arena">
+        <div class="boss-art" id="boss">${bossSvg(id)}</div>
+        <div class="boss-hp"><span>${boss.name}</span><div class="hpbar"><i style="width:${(hp / maxHp) * 100}%"></i></div></div>
+      </div>
+      ${mascot(q.prompt, 'small')}
+      ${q.visual ? `<div class="visual">${q.visual}</div>` : ''}
+      <div class="choices ${q.choiceClass || ''}">
+        ${q.choices.map((c, k) => `<button class="choice" data-k="${k}">${c.html ?? esc(c)}</button>`).join('')}
+      </div>
+      <div class="hint" id="hint" hidden></div>
+    </div>`, p.mode, true);
+    bindQuit();
+    speak(q.speak || q.prompt);
+    const isRight = c => String(c.value ?? c) === String(q.answer);
+    $$('.choice').forEach(b => b.onclick = () => {
+      if (done) return;
+      done = true;
+      const bossEl = $('#boss');
+      if (isRight(q.choices[+b.dataset.k])) {
+        right++;
+        hp--;
+        b.classList.add('right');
+        sfx('hit');
+        bossEl.classList.add('hit');
+        $('.hpbar i').style.width = `${(hp / maxHp) * 100}%`;
+        mascotSay(hp > 0 ? pick(['Pow! Direct hit!', 'Take that!', 'Boom! Keep going!']) : 'Final hit!', 'happy');
+        later(next, 1100);
+      } else {
+        hearts--;
+        b.classList.add('wrong');
+        sfx('wrong');
+        bossEl.classList.add('laugh');
+        $$('.choice').forEach((x, k) => { if (isRight(q.choices[k])) x.classList.add('glow'); });
+        const h = $('#hint');
+        h.hidden = false;
+        h.innerHTML = `${icon('lightbulb')} ${q.explanation}`;
+        $$('.hearts .heart.on')[hearts]?.classList.remove('on');
+        mascotSay(hearts > 0 ? `Oh no, ${hearts} ${hearts === 1 ? 'heart' : 'hearts'} left!` : 'Out of hearts!', 'oops');
+        later(next, 2600);
+      }
+    });
+  };
+
+  const end = won => {
+    const out = finishBoss(p, id, won, right, asked);
+    const name = esc(p.name);
+    show(`<div class="screen center result">
+      <div class="boss-art big ${won ? 'beaten' : ''}">${bossSvg(id)}</div>
+      ${mascot(won ? `You beat ${boss.name}, ${name}!` : `${boss.name} won this time. Practise and try again!`)}
+      ${won ? `<div class="trophy-big">${icon('trophy-fill', 'trophy')}</div>` : ''}
+      <p class="earned">+${out.stars} ${STAR}</p>
+      ${won && out.firstWin ? `<p class="big">You won the ${skill.name} trophy!</p>` : ''}
+      ${eggLine(out.egg)}
+      ${out.newBadges.map(b => `<div class="badge-new">${icon(b.icon)} New badge: <b>${b.name}</b></div>`).join('')}
+      <div class="row">
+        <button class="btn" id="again">${icon('arrow-counter-clockwise')} ${won ? 'Battle again' : 'Try again'}</button>
+        <button class="btn alt" id="map">${icon('map-trifold')} Back to map</button>
+      </div>
+    </div>`, p.mode);
+    $('#again').onclick = () => bossBattle(id);
+    $('#map').onclick = map;
+    $('#hatch')?.addEventListener('click', hatchScreen);
+    if (won) { sfx('win'); confetti(); } else sfx('wrong');
+    speak(won ? `You beat ${boss.name}!` : `${boss.name} won this time. Try again!`);
+  };
+
+  intro();
+}
+
+/* ---------- Kiko's closet ---------- */
+
+function closet(slot = 'hat') {
+  const p = db.current();
+  setOutfit(p.outfit);
+  const items = OUTFITS.filter(o => o.slot === slot);
+  show(`<header class="topbar">
+    <button class="icon-btn" id="back" aria-label="Back">${icon('arrow-left')}</button>
+    <div class="who">Kiko's Closet</div>
+    <div class="pill">${STAR} ${p.stars}</div>
+  </header>
+  <div class="screen center">
+    <div class="closet-kiko" id="preview">${kikoSvg(p.outfit)}</div>
+    <div class="tabs">${SLOTS.map(s => `<button class="tab ${s.id === slot ? 'on' : ''}" data-slot="${s.id}">${s.name}</button>`).join('')}</div>
+    <div class="outfit-grid">
+      ${items.map(o => {
+        const own = p.closet.includes(o.id);
+        const worn = p.outfit[o.slot] === o.id;
+        return `<button class="outfit ${own ? 'own' : ''} ${worn ? 'worn' : ''}" data-id="${o.id}">
+          <span class="outfit-art">${kikoSvg({ [o.slot]: o.id })}</span>
+          <b>${o.name}</b>
+          <small>${worn ? `${icon('check-fill')} Wearing` : own ? 'Tap to wear' : `${STAR} ${o.price}`}</small>
+        </button>`;
+      }).join('')}
+    </div>
+  </div>`, p.mode);
+  $('#back').onclick = map;
+  $$('.tab').forEach(b => b.onclick = () => { sfx('tap'); closet(b.dataset.slot); });
+  $$('.outfit').forEach(b => b.onclick = () => {
+    const o = OUTFITS.find(x => x.id === b.dataset.id);
+    if (p.closet.includes(o.id)) { toggleOutfit(p, o.id); sfx('tap'); return closet(slot); }
+    if (p.stars < o.price) {
+      sfx('wrong');
+      b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+      return;
+    }
+    buyOutfit(p, o.id);
+    sfx('win');
+    closet(slot);
+    confetti();
+  });
 }
 
 function stickerBook() {
   const p = db.current();
   show(`<header class="topbar">
     <button class="icon-btn" id="back" aria-label="Back">${icon('arrow-left')}</button>
-    <div class="who">Sticker Book</div>
+    <div class="who">My Collection</div>
     <div class="pill">${STAR} ${p.stars}</div>
   </header>
   <div class="screen">
+    <h2>Creatures <small>${p.creatures.length}/${CREATURES.length}</small></h2>
+    <div class="creature-grid">
+      ${CREATURES.map(c => {
+        const own = p.creatures.includes(c.id);
+        return `<div class="creature-card ${own ? 'own' : ''}">${own ? creature(c.id) : silhouette(c.id)}<b>${own ? c.name : '???'}</b></div>`;
+      }).join('')}
+    </div>
+    <h2>Trophies <small>${Object.keys(p.trophies).length}/${Object.keys(BOSSES).length}</small></h2>
+    <div class="trophy-grid">
+      ${Object.entries(BOSSES).map(([sid, b]) => {
+        const sk = getSkill(sid);
+        const own = p.trophies[sid];
+        return `<div class="trophy-card ${own ? 'own' : ''}">${icon(own ? 'trophy-fill' : 'lock-simple-fill', own ? 'trophy' : '')}<b>${sk.name}</b><small>${own ? `Beat ${b.name}` : 'Not won yet'}</small></div>`;
+      }).join('')}
+    </div>
+    <h2>Stickers</h2>
     ${mascot(`Each sticker costs ${STICKER_COST} stars. Tap one to collect it!`, 'small')}
     <div class="sticker-grid">
       ${STICKERS.map((s, i) => {
@@ -608,6 +904,7 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
 // and refund stars for any old sticker that no longer exists.
 const OLD_AVATAR = { '🐱': 'cat', '🐶': 'dog', '🐰': 'rabbit', '🐼': 'panda', '🦊': 'fox', '🐸': 'frog', '🦁': 'lion', '🐯': 'lion', '🐨': 'bear', '🐵': 'bear', '🐧': 'panda', '🐢': 'frog' };
 db.profiles.forEach(p => {
+  upgradeProfile(p);
   if (!ANIMAL_IDS.includes(p.avatar)) p.avatar = OLD_AVATAR[p.avatar] || 'cat';
   const old = p.stickers.filter(s => !STICKERS.includes(s));
   if (old.length) { p.stars += old.length * STICKER_COST; p.stickers = p.stickers.filter(s => STICKERS.includes(s)); }

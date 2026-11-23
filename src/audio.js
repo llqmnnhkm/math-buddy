@@ -59,6 +59,9 @@ export function sfx(kind) {
       case 'pop': tone(950, t, 0.05, 'square', 0.08); tone(320, t + 0.03, 0.1, 'square', 0.06); break;
       case 'win': [523, 659, 784, 1047].forEach((f, i) => tone(f, t + i * 0.12, 0.22)); break;
       case 'tap': tone(520, t, 0.05, 'sine', 0.07); break;
+      case 'combo': [784, 988, 1175].forEach((f, i) => tone(f, t + i * 0.07, 0.12, 'triangle', 0.14)); break;
+      case 'hit': tone(180, t, 0.12, 'square', 0.12); tone(660, t + 0.06, 0.12, 'sine', 0.16); break;
+      case 'hatch': tone(300, t, 0.08, 'square', 0.08); [523, 784, 1047, 1319].forEach((f, i) => tone(f, t + 0.1 + i * 0.1, 0.25)); break;
       default: break;
     }
   } catch { /* audio not available */ }

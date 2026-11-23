@@ -28,7 +28,15 @@ const newSkill = () => ({
 const freshProgress = () => ({
   stars: 0, totalStars: 0, stickers: [], badges: [], skills: {}, best: {},
   streak: { count: 0, last: null }, sessions: [],
+  egg: { cracks: 0, need: 2 }, creatures: [], trophies: {}, outfit: {}, closet: [],
 });
+
+/** Fill in fields added in later versions so older saved players keep working. */
+export function upgradeProfile(p) {
+  const base = freshProgress();
+  for (const k of Object.keys(base)) if (p[k] === undefined) p[k] = base[k];
+  return p;
+}
 
 export const db = {
   get profiles() { return state.profiles; },
