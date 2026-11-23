@@ -20,7 +20,7 @@ export default {
   mode: 'pre',
   name: 'Shape Hunt',
   topic: 'Shapes',
-  icon: '🔺',
+  icon: 'shapes',
   hue: 45,
   gameType: 'choice',
   generate(level) {

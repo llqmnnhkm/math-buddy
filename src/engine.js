@@ -1,21 +1,19 @@
 // Adaptive difficulty, stars, streaks, stickers and badges.
 import { db, save } from './db.js';
+import { STICKER_IDS } from './art.js';
 
 export const MAX_LEVEL = 3;
 export const STICKER_COST = 10;
 
-export const STICKERS = [
-  '🦄', '🚀', '🌈', '🍩', '🦖', '🐙', '🎈', '🍉', '🏆', '🎸', '🐳', '🌻',
-  '🍕', '🦋', '⚽', '🎨', '🐞', '🍦', '🚂', '🪁', '🦜', '🌙', '🧁', '🛸',
-];
+export const STICKERS = STICKER_IDS;
 
 export const BADGES = [
-  { id: 'first', icon: '🎉', name: 'First Round', desc: 'Finish your first game' },
-  { id: 'perfect', icon: '💯', name: 'Perfect!', desc: 'Every answer right on the first try' },
-  { id: 'stars50', icon: '🌟', name: 'Star Collector', desc: 'Earn 50 stars' },
-  { id: 'streak3', icon: '🔥', name: 'On Fire', desc: 'Play 3 days in a row' },
-  { id: 'speed20', icon: '⚡', name: 'Lightning', desc: 'Score 20 in a Speed Round' },
-  { id: 'stickers5', icon: '📒', name: 'Sticker Fan', desc: 'Collect 5 stickers' },
+  { id: 'first', icon: 'confetti', name: 'First Round', desc: 'Finish your first game' },
+  { id: 'perfect', icon: 'seal-check', name: 'Perfect!', desc: 'Every answer right on the first try' },
+  { id: 'stars50', icon: 'star', name: 'Star Collector', desc: 'Earn 50 stars' },
+  { id: 'streak3', icon: 'fire', name: 'On Fire', desc: 'Play 3 days in a row' },
+  { id: 'speed20', icon: 'lightning', name: 'Lightning', desc: 'Score 20 in a Speed Round' },
+  { id: 'stickers5', icon: 'sticker', name: 'Sticker Fan', desc: 'Collect 5 stickers' },
 ];
 
 const sum = a => a.reduce((x, y) => x + y, 0);

@@ -6,7 +6,7 @@ export default {
   mode: 'y5',
   name: 'Speed Round',
   topic: 'Whole numbers & operations',
-  icon: '⚡',
+  icon: 'lightning',
   hue: 260,
   gameType: 'speed',
   generate(level) {

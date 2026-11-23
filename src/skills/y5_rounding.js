@@ -8,7 +8,7 @@ export default {
   mode: 'y5',
   name: 'Round the Rocket',
   topic: 'Rounding to 1 000 000',
-  icon: '🚀',
+  icon: 'rocket-launch',
   hue: 200,
   gameType: 'choice',
   generate(level) {

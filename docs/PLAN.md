@@ -77,6 +77,7 @@ This keeps children winning about 80% of the time.
 * **Hints, not failure:** after 2 wrong tries, show the explanation and highlight the answer
 * **Rewards:** stars, a sticker book (10 stars per sticker), badges
 * **Daily streak:** forgiving, so one missed day does not reset it
+* **Own art style, no emoji:** drawn animals and items in Kiko's style, ten frames for counting, Phosphor line icons
 * **Local context:** night market food like roti canai, teh tarik, ringgit and sen, Malaysian names
 
 ## Data model (localStorage, key `mathbuddy:v1`)

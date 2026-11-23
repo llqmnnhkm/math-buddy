@@ -16,6 +16,7 @@ It is an offline first PWA with no login. Progress is saved on the device, and i
 * Read aloud for every question (Web Speech API), plus sound effects made with Web Audio (no audio files)
 * Stars, a sticker book, badges, a forgiving daily streak and confetti
 * Hints after 2 wrong tries, with the correct answer highlighted
+* No emoji: hand drawn SVG art in Kiko's style (avatars, counting items, stickers), ten frame counters for counting and adding, and Phosphor line icons for the interface
 * Parent corner behind a simple maths gate: progress per skill, weekly summary, reset and delete
 
 ## Run locally
@@ -51,6 +52,8 @@ src/
   engine.js       Adaptive levels, stars, streaks, stickers, badges
   audio.js        Read aloud and sound effects
   fx.js           Kiko mascot and confetti
+  art.js          Drawn animals, counting items, ten frames, stickers
+  icons.js        Bundled Phosphor icons (MIT)
   skills/         One file per skill (question generator)
 docs/PLAN.md      Product plan, curriculum map and roadmap
 ```
@@ -82,3 +85,7 @@ export default {
 ```
 
 Then import it in `src/skills/index.js` and add the file to the `FILES` list in `sw.js`.
+
+## Credits
+
+Interface icons: [Phosphor Icons](https://phosphoricons.com) (MIT License). All other art is original SVG drawn for this app.

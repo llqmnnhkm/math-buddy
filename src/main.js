@@ -3,6 +3,8 @@ import { speak, sfx, setSound, soundOn, stopSpeech } from './audio.js';
 import { mascot, mascotSay, confetti } from './fx.js';
 import { skillsFor, getSkill } from './skills/index.js';
 import { record, finishSession, buySticker, STICKERS, STICKER_COST, BADGES, MAX_LEVEL } from './engine.js';
+import { icon } from './icons.js';
+import { animal, ANIMAL_IDS, sticker } from './art.js';
 
 const app = document.getElementById('app');
 const $ = s => app.querySelector(s);
@@ -10,7 +12,9 @@ const $$ = s => [...app.querySelectorAll(s)];
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const pick = a => a[Math.floor(Math.random() * a.length)];
 
-const AVATARS = ['🐱', '🐶', '🐰', '🐼', '🦊', '🐯', '🐸', '🐵', '🦁', '🐨', '🐧', '🐢'];
+const AVATARS = ANIMAL_IDS;
+const STAR = icon('star-fill', 'star');
+const FIRE = icon('fire-fill', 'fire');
 const CHEERS = ['Great job!', 'Awesome!', 'You got it!', 'Super!', 'Well done!', 'Brilliant!', 'Fantastic!'];
 const OOPS = ['Oops, try again!', 'Almost! Try once more.', 'Not quite. You can do it!'];
 const BALLOON_COLORS = ['#ff6b6b', '#ffb703', '#6bcb77', '#4d96ff', '#c77dff', '#ff8fab'];
@@ -41,10 +45,10 @@ function home() {
     <h1 class="title">Math Buddy</h1>
     ${mascot('Hi! Who is playing today?')}
     <div class="profile-grid">
-      ${ps.map(p => `<button class="profile-card" data-id="${p.id}"><span class="avatar">${p.avatar}</span><span class="pname">${esc(p.name)}</span><small>⭐ ${p.stars}</small></button>`).join('')}
-      <button class="profile-card add" id="add"><span class="avatar">➕</span><span class="pname">Add player</span></button>
+      ${ps.map(p => `<button class="profile-card" data-id="${p.id}"><span class="avatar">${animal(p.avatar)}</span><span class="pname">${esc(p.name)}</span><small>${STAR} ${p.stars}</small></button>`).join('')}
+      <button class="profile-card add" id="add"><span class="avatar add-ic">${icon('plus')}</span><span class="pname">Add player</span></button>
     </div>
-    <button class="link" id="parent">👪 Parent corner</button>
+    <button class="link" id="parent">${icon('users-three')} Parent corner</button>
   </div>`);
   $$('.profile-card[data-id]').forEach(b => b.onclick = () => {
     sfx('tap');
@@ -65,8 +69,8 @@ function createProfile(first) {
       <label class="label" for="name">Name</label>
       <input id="name" maxlength="16" autocomplete="off" placeholder="e.g. Aiman">
       <div class="label">Pick your animal</div>
-      <div class="avatar-pick">${AVATARS.map((a, i) => `<button class="av ${i === 0 ? 'sel' : ''}" data-a="${a}">${a}</button>`).join('')}</div>
-      <button class="btn" id="save">Let's go! 🚀</button>
+      <div class="avatar-pick">${AVATARS.map((a, i) => `<button class="av ${i === 0 ? 'sel' : ''}" data-a="${a}" aria-label="${a}">${animal(a)}</button>`).join('')}</div>
+      <button class="btn" id="save">Let's go! ${icon('arrow-right')}</button>
       ${first ? '' : '<button class="link" id="cancel">Cancel</button>'}
     </div>
   </div>`);
@@ -94,8 +98,8 @@ function modeSelect() {
   show(`<div class="screen center">
     ${mascot(`Which one are you, ${esc(p.name)}?`)}
     <div class="mode-grid">
-      <button class="mode-card pre" data-m="pre"><span class="mode-icon">🧸</span><b>Little Learners</b><small>Age 5 · counting, numbers, shapes, adding</small></button>
-      <button class="mode-card y5" data-m="y5"><span class="mode-icon">🚀</span><b>Standard 5</b><small>KSSR Year 5 · numbers, fractions, rounding, money</small></button>
+      <button class="mode-card pre" data-m="pre"><span class="mode-icon">${animal('rabbit')}</span><b>Little Learners</b><small>Age 5 · counting, numbers, shapes, adding</small></button>
+      <button class="mode-card y5" data-m="y5"><span class="mode-icon rocket">${icon('rocket-launch')}</span><b>Standard 5</b><small>KSSR Year 5 · numbers, fractions, rounding, money</small></button>
     </div>
     <button class="link" id="back">Back</button>
   </div>`);
@@ -107,10 +111,10 @@ function modeSelect() {
 
 function topbar(p, extra = '') {
   return `<header class="topbar">
-    <button class="icon-btn" id="home" aria-label="Home">🏠</button>
-    <div class="who">${p.avatar} ${esc(p.name)}</div>
-    <div class="pill" title="Stars">⭐ ${p.stars}</div>
-    <div class="pill" title="Day streak">🔥 ${p.streak.count}</div>
+    <button class="icon-btn" id="home" aria-label="Home">${icon('house')}</button>
+    <div class="who"><span class="mini-av">${animal(p.avatar)}</span>${esc(p.name)}</div>
+    <div class="pill" title="Stars">${STAR} ${p.stars}</div>
+    <div class="pill" title="Day streak">${FIRE} ${p.streak.count}</div>
     ${extra}
   </header>`;
 }
@@ -121,14 +125,14 @@ function map() {
   if (!p.mode) return modeSelect();
   const list = skillsFor(p.mode);
   const hello = p.mode === 'pre' ? `Pick a game, ${esc(p.name)}!` : `Choose an island to explore, ${esc(p.name)}!`;
-  show(`${topbar(p, `<button class="icon-btn" id="stickers" aria-label="Sticker book">📒</button><button class="icon-btn" id="sound" aria-label="Sound">${soundOn() ? '🔊' : '🔇'}</button>`)}
+  show(`${topbar(p, `<button class="icon-btn" id="stickers" aria-label="Sticker book">${icon('sticker')}</button><button class="icon-btn" id="sound" aria-label="Sound">${icon(soundOn() ? 'speaker-high' : 'speaker-slash')}</button>`)}
   <div class="screen">
     ${mascot(hello)}
     <div class="island-grid">
       ${list.map(s => {
         const st = db.skill(p, s.id);
         return `<button class="island" data-id="${s.id}" style="--hue:${s.hue}">
-          <span class="island-icon">${s.icon}</span>
+          <span class="island-icon">${icon(s.icon)}</span>
           <span class="island-name">${s.name}</span>
           <span class="island-topic">${s.topic}</span>
           <span class="lvl">${'●'.repeat(st.level)}${'○'.repeat(MAX_LEVEL - st.level)} Level ${st.level}</span>
@@ -157,9 +161,9 @@ function play(id) {
 }
 
 const progressBar = (skill, i, total) => `<header class="topbar">
-  <button class="icon-btn" id="quit" aria-label="Quit">✖</button>
+  <button class="icon-btn" id="quit" aria-label="Quit">${icon('x')}</button>
   <div class="dots">${Array.from({ length: total }, (_, k) => `<i class="${k < i ? 'done' : k === i ? 'now' : ''}"></i>`).join('')}</div>
-  <div class="who">${skill.icon}</div>
+  <div class="who skill-ic">${icon(skill.icon)}</div>
 </header>`;
 
 const bindQuit = () => { $('#quit').onclick = map; };
@@ -173,12 +177,12 @@ function cheer(p) {
 function showHint(q) {
   const h = $('#hint');
   h.hidden = false;
-  h.innerHTML = `💡 ${q.explanation}`;
+  h.innerHTML = `${icon('lightbulb')} ${q.explanation}`;
   speak(q.explanation);
 }
 
 function levelNote(p, change) {
-  if (change > 0) mascotSay('Level up! 🎉 Things get a bit harder now.', 'happy');
+  if (change > 0) mascotSay('Level up! Things get a bit harder now.', 'happy');
 }
 
 // Multiple choice: counting, adding, shapes, fractions, rounding, money.
@@ -282,19 +286,19 @@ function runBalloon(skill, p) {
 function runSpeed(skill, p) {
   const best = p.best[skill.id] || 0;
   show(`<header class="topbar">
-    <button class="icon-btn" id="quit" aria-label="Quit">✖</button>
-    <div class="who">${skill.icon} ${skill.name}</div>
-    <div class="pill" title="Best score">🏆 ${best}</div>
+    <button class="icon-btn" id="quit" aria-label="Quit">${icon('x')}</button>
+    <div class="who"><span class="skill-ic">${icon(skill.icon)}</span> ${skill.name}</div>
+    <div class="pill" title="Best score">${icon('trophy-fill', 'trophy')} ${best}</div>
   </header>
   <div class="screen play speed">
     <div class="timer"><i id="tbar"></i></div>
     <div class="score">Score <b id="score">0</b> <span id="tleft">60s</span></div>
     <div class="question" id="q">
       ${mascot('Answer as many as you can in 60 seconds. Ready?', 'small')}
-      <button class="btn" id="start">Start! ⚡</button>
+      <button class="btn" id="start">Start! ${icon('lightning')}</button>
     </div>
     <div class="answer" id="ans"></div>
-    <div class="numpad">${['1', '2', '3', '4', '5', '6', '7', '8', '9', '⌫', '0', '✓'].map(k => `<button data-k="${k}" class="${k === '✓' ? 'ok' : ''}">${k}</button>`).join('')}</div>
+    <div class="numpad">${['1', '2', '3', '4', '5', '6', '7', '8', '9', 'del', '0', 'ok'].map(k => `<button data-k="${k}" class="${k === 'ok' ? 'ok' : ''}" aria-label="${k === 'del' ? 'Delete' : k === 'ok' ? 'Check answer' : k}">${k === 'del' ? icon('backspace') : k === 'ok' ? icon('check-fill') : k}</button>`).join('')}</div>
   </div>`, p.mode, true);
   bindQuit();
 
@@ -329,8 +333,8 @@ function runSpeed(skill, p) {
   };
   const key = k => {
     if (!running || lock) return;
-    if (k === '⌫') input = input.slice(0, -1);
-    else if (k === '✓') return submit();
+    if (k === 'del') input = input.slice(0, -1);
+    else if (k === 'ok') return submit();
     else if (input.length < 7) input += k;
     ansEl.textContent = input;
     sfx('tap');
@@ -338,8 +342,8 @@ function runSpeed(skill, p) {
   $$('.numpad button').forEach(b => b.onclick = () => key(b.dataset.k));
   const onKey = e => {
     if (/^[0-9]$/.test(e.key)) key(e.key);
-    else if (e.key === 'Backspace') key('⌫');
-    else if (e.key === 'Enter') { e.preventDefault(); running ? key('✓') : $('#start')?.click(); }
+    else if (e.key === 'Backspace') key('del');
+    else if (e.key === 'Enter') { e.preventDefault(); running ? key('ok') : $('#start')?.click(); }
   };
   document.addEventListener('keydown', onKey);
   cleanup = () => { running = false; clearInterval(timer); document.removeEventListener('keydown', onKey); };
@@ -371,14 +375,14 @@ function result(skill, p, r) {
       : `Good try, ${name}! Practice makes perfect.`;
   show(`<div class="screen center result">
     ${mascot(msg)}
-    <div class="rating">${[1, 2, 3].map(k => `<span class="${k <= out.rating ? 'on' : ''}" style="animation-delay:${k * 0.25}s">⭐</span>`).join('')}</div>
+    <div class="rating">${[1, 2, 3].map(k => `<span class="${k <= out.rating ? 'on' : ''}" style="animation-delay:${k * 0.25}s">${icon('star-fill')}</span>`).join('')}</div>
     <p class="big">${r.speed ? `${r.correct} correct in 60 seconds!` : `${r.correct} of ${r.total} right on the first try`}</p>
-    <p class="earned">+${out.stars} ⭐</p>
-    ${out.newBest ? '<div class="badge-new">🏆 New best score!</div>' : ''}
-    ${out.newBadges.map(b => `<div class="badge-new">${b.icon} New badge: <b>${b.name}</b></div>`).join('')}
+    <p class="earned">+${out.stars} ${STAR}</p>
+    ${out.newBest ? `<div class="badge-new">${icon('trophy-fill', 'trophy')} New best score!</div>` : ''}
+    ${out.newBadges.map(b => `<div class="badge-new">${icon(b.icon)} New badge: <b>${b.name}</b></div>`).join('')}
     <div class="row">
-      <button class="btn" id="again">Play again 🔁</button>
-      <button class="btn alt" id="map">Back to map 🗺️</button>
+      <button class="btn" id="again">${icon('arrow-counter-clockwise')} Play again</button>
+      <button class="btn alt" id="map">${icon('map-trifold')} Back to map</button>
     </div>
   </div>`, p.mode);
   $('#again').onclick = () => play(skill.id);
@@ -391,23 +395,23 @@ function result(skill, p, r) {
 function stickerBook() {
   const p = db.current();
   show(`<header class="topbar">
-    <button class="icon-btn" id="back" aria-label="Back">⬅</button>
-    <div class="who">📒 Sticker Book</div>
-    <div class="pill">⭐ ${p.stars}</div>
+    <button class="icon-btn" id="back" aria-label="Back">${icon('arrow-left')}</button>
+    <div class="who">Sticker Book</div>
+    <div class="pill">${STAR} ${p.stars}</div>
   </header>
   <div class="screen">
     ${mascot(`Each sticker costs ${STICKER_COST} stars. Tap one to collect it!`, 'small')}
     <div class="sticker-grid">
-      ${STICKERS.map(s => {
+      ${STICKERS.map((s, i) => {
         const own = p.stickers.includes(s);
-        return `<button class="sticker ${own ? 'own' : ''}" data-s="${s}" aria-label="${own ? 'Collected sticker' : 'Locked sticker'}">${own ? s : '❔'}${own ? '' : `<small>⭐${STICKER_COST}</small>`}</button>`;
+        return `<button class="sticker ${own ? 'own' : ''}" data-s="${s}" aria-label="${own ? 'Collected sticker' : 'Locked sticker'}">${own ? sticker(s, i) : `<span class="locked">${icon('lock-simple-fill')}</span><small>${STAR}${STICKER_COST}</small>`}</button>`;
       }).join('')}
     </div>
     <h2>Badges</h2>
     <div class="badge-grid">
       ${BADGES.map(b => {
         const own = p.badges.includes(b.id);
-        return `<div class="badge ${own ? 'own' : ''}"><span>${own ? b.icon : '🔒'}</span><b>${b.name}</b><small>${b.desc}</small></div>`;
+        return `<div class="badge ${own ? 'own' : ''}"><span class="bicon">${icon(own ? b.icon : 'lock-simple-fill')}</span><b>${b.name}</b><small>${b.desc}</small></div>`;
       }).join('')}
     </div>
   </div>`, p.mode);
@@ -431,7 +435,7 @@ function parentGate() {
   const b = 10 + Math.floor(Math.random() * 40);
   show(`<div class="screen center">
     <div class="card form">
-      <h2>👪 Parent corner</h2>
+      <h2>${icon('users-three')} Parent corner</h2>
       <p>Grown ups only! What is ${a} + ${b}?</p>
       <input id="g" inputmode="numeric" autocomplete="off" aria-label="Answer">
       <button class="btn" id="ok">Enter</button>
@@ -460,16 +464,16 @@ function parentCard(p) {
   const modeName = p.mode === 'pre' ? 'Little Learners' : p.mode === 'y5' ? 'Standard 5' : 'No mode yet';
   return `<div class="card pcard">
     <div class="prow">
-      <span class="avatar">${p.avatar}</span>
+      <span class="avatar">${animal(p.avatar)}</span>
       <div class="pinfo"><b>${esc(p.name)}</b><small>${modeName}</small></div>
-      <div class="pill">⭐ ${p.stars}</div>
-      <div class="pill">🔥 ${p.streak.count}</div>
+      <div class="pill">${STAR} ${p.stars}</div>
+      <div class="pill">${FIRE} ${p.streak.count}</div>
     </div>
     <p class="summary">This week: ${week.length} ${week.length === 1 ? 'round' : 'rounds'}, ${weekStars} stars earned.${weak ? ` Needs more practice: <b>${weak.sk.name}</b>.` : ''}</p>
     ${played.length ? `<div class="table-wrap"><table>
       <thead><tr><th>Skill</th><th>Level</th><th>Accuracy</th><th>Mastery</th><th>Last played</th></tr></thead>
       <tbody>${played.map(({ sk, s }) => `<tr>
-        <td>${sk.icon} ${sk.name}</td>
+        <td><span class="skill-ic">${icon(sk.icon)}</span> ${sk.name}</td>
         <td>${s.level}/${MAX_LEVEL}</td>
         <td>${Math.round((s.correct / s.attempts) * 100)}%</td>
         <td><span class="mbar"><i style="width:${s.mastery}%"></i></span></td>
@@ -486,9 +490,9 @@ function parentCard(p) {
 function parent() {
   const ps = db.profiles;
   show(`<header class="topbar">
-    <button class="icon-btn" id="home" aria-label="Home">🏠</button>
-    <div class="who">👪 Parent corner</div>
-    <button class="icon-btn" id="sound" aria-label="Sound">${soundOn() ? '🔊' : '🔇'}</button>
+    <button class="icon-btn" id="home" aria-label="Home">${icon('house')}</button>
+    <div class="who">Parent corner</div>
+    <button class="icon-btn" id="sound" aria-label="Sound">${icon(soundOn() ? 'speaker-high' : 'speaker-slash')}</button>
   </header>
   <div class="screen parent">
     ${ps.length ? ps.map(parentCard).join('') : '<p class="muted">No players yet.</p>'}
@@ -599,6 +603,15 @@ if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').then(watchForUpdates).catch(() => {});
   });
 }
+
+// Older versions saved emoji for avatars and stickers. Move them to the drawn set,
+// and refund stars for any old sticker that no longer exists.
+const OLD_AVATAR = { '🐱': 'cat', '🐶': 'dog', '🐰': 'rabbit', '🐼': 'panda', '🦊': 'fox', '🐸': 'frog', '🦁': 'lion', '🐯': 'lion', '🐨': 'bear', '🐵': 'bear', '🐧': 'panda', '🐢': 'frog' };
+db.profiles.forEach(p => {
+  if (!ANIMAL_IDS.includes(p.avatar)) p.avatar = OLD_AVATAR[p.avatar] || 'cat';
+  const old = p.stickers.filter(s => !STICKERS.includes(s));
+  if (old.length) { p.stars += old.length * STICKER_COST; p.stickers = p.stickers.filter(s => STICKERS.includes(s)); }
+});
 
 save();
 home();

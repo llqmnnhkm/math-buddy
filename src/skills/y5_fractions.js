@@ -25,7 +25,7 @@ export default {
   mode: 'y5',
   name: 'Pizza Fractions',
   topic: 'Fractions, decimals & percentages',
-  icon: '🍕',
+  icon: 'pizza',
   hue: 25,
   gameType: 'choice',
   generate(level) {

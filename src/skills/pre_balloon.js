@@ -5,7 +5,7 @@ export default {
   mode: 'pre',
   name: 'Pop the Balloon',
   topic: 'Numbers',
-  icon: '🎈',
+  icon: 'balloon',
   hue: 330,
   gameType: 'balloon',
   generate(level) {
