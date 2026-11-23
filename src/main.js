@@ -8,7 +8,7 @@ import {
 } from './engine.js';
 import { CREATURES, creature, silhouette, eggSvg, BOSSES, bossSvg } from './creatures.js';
 import { numChoices, fmtNum } from './skills/util.js';
-import { columnForm } from './column.js';
+import { columnForm, answerBoxes, fillBoxes } from './column.js';
 import { icon } from './icons.js';
 import { animal, ANIMAL_IDS, sticker } from './art.js';
 
@@ -369,21 +369,53 @@ function runSpeed(skill, p) {
   </div>`, p.mode, true);
   bindQuit();
 
-  let score = 0, wrongN = 0, input = '', q = null, running = false, lock = false, timer = null, end = 0;
+  let score = 0, wrongN = 0, q = null, running = false, lock = false, timer = null, end = 0;
+  // Answer boxes by place value: vals[0] = ones, vals[1] = tens, ...
+  let vals = [], boxes = 0, active = 0, rtl = true;
   const combo = comboTracker();
   const qEl = $('#q');
-  let ansEl = null;
 
+  const render = () => {
+    qEl.querySelectorAll('.box').forEach(box => {
+      const r = +box.dataset.r;
+      box.textContent = vals[r] ?? '';
+      box.classList.toggle('active', r === active);
+    });
+  };
   const newQ = () => {
     q = skill.generate(db.skill(p, skill.id).level);
-    qEl.innerHTML = columnForm(q.col, '', 'ans');
-    ansEl = $('#ans');
-    input = '';
+    qEl.innerHTML = columnForm(q.col, { interactive: true });
+    boxes = answerBoxes(q.col);
+    vals = [];
+    // Column method: + − × start at the ones and move left. Long division starts on the left.
+    rtl = q.col.op !== 'div';
+    active = rtl ? 0 : boxes - 1;
+    qEl.querySelectorAll('.box').forEach(box => box.onclick = () => {
+      if (!running || lock) return;
+      active = +box.dataset.r;
+      sfx('tap');
+      render();
+    });
     $('#note').textContent = '';
+    render();
   };
+  const typed = () => vals.some(v => v !== undefined);
   const submit = () => {
-    if (!running || lock || input === '') return;
-    const ok = Number(input) === q.answer;
+    if (!running || lock || !typed()) return;
+    const filled = vals.map((v, r) => (v !== undefined ? r : -1)).filter(r => r >= 0);
+    const hi = Math.max(...filled), lo = Math.min(...filled);
+    // A gap between digits is easy to miss, so ask for a 0 instead of marking it wrong.
+    for (let r = lo; r <= hi; r++) {
+      if (vals[r] === undefined && r !== 0) {
+        $('#note').innerHTML = 'Fill the empty box between your digits. Use <b>0</b> if needed.';
+        sfx('wrong');
+        active = r;
+        render();
+        return;
+      }
+    }
+    const value = vals.reduce((sum, v, r) => sum + (v ? Number(v) * 10 ** r : 0), 0);
+    const ok = value === q.answer;
     record(p, skill.id, ok);
     combo.hit(ok);
     lock = true;
@@ -391,29 +423,43 @@ function runSpeed(skill, p) {
       score++;
       $('#score').textContent = score;
       sfx('right');
-      ansEl.classList.add('ok');
-      later(() => { lock = false; if (running) newQ(); }, 250);
+      fillBoxes(qEl, q.answer, 'ok');
+      later(() => { lock = false; if (running) newQ(); }, 300);
     } else {
       wrongN++;
       sfx('wrong');
-      ansEl.classList.add('bad');
-      ansEl.textContent = fmtNum(q.answer);
-      $('#note').innerHTML = `You wrote <s>${esc(fmtNum(input))}</s>. The answer is <b>${fmtNum(q.answer)}</b>.`;
-      later(() => { lock = false; if (running) newQ(); }, 1000);
+      fillBoxes(qEl, q.answer, 'bad');
+      $('#note').innerHTML = `You wrote <s>${fmtNum(value)}</s>. The answer is <b>${fmtNum(q.answer)}</b>.`;
+      later(() => { lock = false; if (running) newQ(); }, 1400);
     }
   };
   const key = k => {
     if (!running || lock) return;
-    if (k === 'del') input = input.slice(0, -1);
-    else if (k === 'ok') return submit();
-    else if (input.length < 7) input += k;
-    ansEl.textContent = input ? fmtNum(input) : '';
+    if (k === 'ok') return submit();
+    if (k === 'del') {
+      // Clear this box, or step back to the box typed before it.
+      if (vals[active] === undefined) {
+        const back = rtl ? active - 1 : active + 1;
+        if (back >= 0 && back < boxes) active = back;
+      }
+      vals[active] = undefined;
+    } else if (k === 'left' || k === 'right') {
+      active = Math.max(0, Math.min(boxes - 1, active + (k === 'left' ? 1 : -1)));
+    } else {
+      vals[active] = k;
+      const next = rtl ? active + 1 : active - 1;
+      if (next >= 0 && next < boxes) active = next;
+    }
+    $('#note').textContent = '';
+    render();
     sfx('tap');
   };
   $$('.numpad button').forEach(b => b.onclick = () => key(b.dataset.k));
   const onKey = e => {
     if (/^[0-9]$/.test(e.key)) key(e.key);
     else if (e.key === 'Backspace') key('del');
+    else if (e.key === 'ArrowLeft') key('left');
+    else if (e.key === 'ArrowRight') key('right');
     else if (e.key === 'Enter') { e.preventDefault(); running ? key('ok') : $('#start')?.click(); }
   };
   document.addEventListener('keydown', onKey);

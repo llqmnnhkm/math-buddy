@@ -224,25 +224,30 @@ input:focus { border-color: var(--accent); }
 .score { font-weight: 800; font-size: 1.2rem; display: flex; justify-content: center; gap: 18px; }
 .score b { color: var(--accent); font-size: 1.5rem; }
 .question { min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-/* Bentuk lazim (column method) */
+/* Bentuk lazim (column method): one grid column per place value */
 .colform {
-  position: relative; display: inline-block; width: var(--w); min-width: 4ch; margin: 6px auto 0;
-  font-size: clamp(2.2rem, 9vw, 3rem); font-weight: 900; line-height: 1.25;
-  font-variant-numeric: tabular-nums; text-align: right; box-sizing: content-box; padding: 0 0.15em;
+  --cw: 1.15em;
+  display: inline-grid; justify-items: center; align-items: center; row-gap: 4px;
+  margin: 6px auto 0; font-size: clamp(1.9rem, 8vw, 2.6rem); font-weight: 900; line-height: 1.15;
+  font-variant-numeric: tabular-nums;
 }
-.col-row { white-space: pre; min-height: 1.25em; }
-.col-op { position: absolute; left: 0; color: var(--accent); }
-.col-line { border-top: 4px solid var(--ink); margin: 4px -0.15em; }
-.col-line.double { border-top-width: 0; border-bottom: 3px double var(--ink); height: 4px; margin-top: 2px; }
-.col-ans { color: var(--accent); min-height: 1.25em; }
-.col-ans.ok { color: var(--good); }
-.col-ans.bad { color: var(--bad); }
-.colform.div { display: inline-grid; grid-template-columns: auto auto; width: auto; align-items: end; }
-.colform.div .col-ans { text-align: right; padding-right: 0.2em; padding-left: 0.4em; border-bottom: 4px solid var(--ink); white-space: pre; }
-.div-b { padding-right: 0.25em; }
-.div-a { position: relative; padding: 0.05em 0.2em 0 0.55em; text-align: right; white-space: pre; }
-.div-a::before {
-  content: ""; position: absolute; left: 0; top: -2px; bottom: 0.1em; width: 0.35em;
+.colform .cd { justify-self: end; width: var(--cw); text-align: center; }
+.col-op { color: var(--accent); padding-right: 0.25em; }
+.col-line { justify-self: stretch; border-top: 4px solid var(--ink); }
+.col-line.double { border-top: 0; border-bottom: 4px double var(--ink); height: 4px; }
+.colform .box {
+  justify-self: end; width: calc(var(--cw) - 4px); height: 1.3em; margin: 2px 2px 2px 0;
+  border: 3px dashed #c9c2dc; border-radius: 10px; background: rgba(255, 255, 255, 0.85);
+  font: inherit; color: var(--accent); display: flex; align-items: center; justify-content: center; padding: 0;
+}
+.colform .box.active { border: 3px solid var(--accent); box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.18); animation: boxPulse 1.2s ease-in-out infinite; }
+.colform .box.ok { border: 3px solid var(--good); color: var(--good); background: #e4f9ee; animation: none; }
+.colform .box.bad { border: 3px solid var(--bad); color: var(--bad); background: #ffeaea; animation: none; }
+.colform.div { align-items: end; }
+.div-b { padding-right: 0.15em; align-self: center; }
+.div-line { justify-self: stretch; align-self: start; border-top: 4px solid var(--ink); }
+.div-bracket {
+  align-self: stretch; justify-self: end; width: 0.4em; margin-right: 2px;
   border-right: 4px solid var(--ink); border-radius: 0 60% 60% 0 / 0 50% 50% 0;
 }
 .col-note { min-height: 1.6em; font-weight: 700; color: var(--muted); margin: 4px 0 10px; }
@@ -415,6 +420,7 @@ h2 small { color: var(--muted); font-size: 0.9rem; }
 @keyframes laugh { 0%, 100% { transform: translateY(0) scale(1); } 30% { transform: translateY(-14px) scale(1.08); } 60% { transform: translateY(0) scale(1.02); } }
 @keyframes float2 { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 @keyframes glowCard { 0%, 100% { box-shadow: 0 0 0 0 #ffe066, var(--shadow); } 50% { box-shadow: 0 0 0 8px #ffe066, var(--shadow); } }
+@keyframes boxPulse { 0%, 100% { box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.15); } 50% { box-shadow: 0 0 0 7px rgba(108, 92, 231, 0.25); } }
 @keyframes flyAway { 0% { transform: translate(0, 18px); opacity: 1; } 100% { transform: translate(0, 0); opacity: 0.35; } }
 @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 80% { transform: scale(1.15); } 100% { transform: scale(1); opacity: 1; } }
 @keyframes starIn { 0% { transform: scale(0) rotate(-90deg); } 70% { transform: scale(1.3) rotate(10deg); } 100% { transform: scale(1) rotate(0); } }

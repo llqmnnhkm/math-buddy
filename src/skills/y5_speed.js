@@ -36,7 +36,7 @@ export default {
       speak: `${a} ${{ add: 'plus', sub: 'minus', mul: 'times', div: 'divided by' }[op]} ${b}`,
       text: `${fmtNum(a)} ${sym} ${fmtNum(b)}`,
       col,
-      visual: columnForm(col, '?'), // used by the boss battle
+      visual: columnForm(col), // used by the boss battle
       answer: ans,
       explanation: `${fmtNum(a)} ${sym} ${fmtNum(b)} = ${fmtNum(ans)}.`,
     };

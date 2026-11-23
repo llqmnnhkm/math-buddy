@@ -1,7 +1,7 @@
 // Offline support: cache the app shell, serve from cache first.
 // Bump VERSION whenever you change any file. Phones then download the new
 // version in the background and show "Update ready. Tap to restart".
-const VERSION = 'mathbuddy-v7';
+const VERSION = 'mathbuddy-v8';
 const FILES = [
   './', './index.html', './styles.css', './manifest.json',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
