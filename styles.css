@@ -233,6 +233,15 @@ th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #eee9f5; w
 th { color: var(--muted); font-size: 0.85rem; }
 td .mbar { background: #eee9f5; width: 90px; }
 
+/* ---------- Update banner ---------- */
+.update-banner {
+  display: block; width: 100%; text-align: left;
+  padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top));
+  background: var(--accent); color: #fff; font-weight: 700; font-size: 1rem;
+}
+.update-banner[hidden] { display: none; }
+.update-banner b { margin-right: 4px; }
+
 /* ---------- Effects ---------- */
 .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
 .shake { animation: shake 0.45s; }

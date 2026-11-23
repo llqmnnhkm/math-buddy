@@ -35,7 +35,7 @@ Opening `index.html` directly from disk will not work, because ES modules need a
 2. Go to **Settings → Pages**, set Source to **Deploy from a branch**, branch `main`, folder `/ (root)`.
 3. The app will be live at `https://<username>.github.io/math-buddy/`.
 
-After changing any file, bump `VERSION` in `sw.js` so installed copies update.
+After changing any file, bump `VERSION` in `sw.js`. Installed copies download the new version in the background and show an "Update ready. Tap to restart" banner (never in the middle of a game).
 
 ## Project structure
 

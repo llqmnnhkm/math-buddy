@@ -1,6 +1,7 @@
 // Offline support: cache the app shell, serve from cache first.
-// Bump VERSION whenever you change any file so phones pick up the update.
-const VERSION = 'mathbuddy-v2';
+// Bump VERSION whenever you change any file. Phones then download the new
+// version in the background and show "Update ready. Tap to restart".
+const VERSION = 'mathbuddy-v3';
 const FILES = [
   './', './index.html', './styles.css', './manifest.json',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
@@ -11,7 +12,13 @@ const FILES = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  // cache: 'reload' skips the browser's HTTP cache so we never save an old file.
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))));
+});
+
+// The page asks for this when the child taps the update banner.
+self.addEventListener('message', e => {
+  if (e.data === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {

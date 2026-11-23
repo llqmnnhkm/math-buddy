@@ -18,15 +18,17 @@ const BALLOON_COLORS = ['#ff6b6b', '#ffb703', '#6bcb77', '#4d96ff', '#c77dff', '
 // gen changes whenever we leave a screen, so delayed callbacks from an old game do nothing.
 let gen = 0;
 let cleanup = null;
+let playing = false;
 const later = (fn, ms) => { const g = gen; setTimeout(() => { if (g === gen) fn(); }, ms); };
 
 function show(html, mode = '', keep = false) {
-  if (!keep) gen++;
+  if (!keep) { gen++; playing = false; }
   if (cleanup) { cleanup(); cleanup = null; }
   stopSpeech();
   document.body.className = mode ? `mode-${mode}` : '';
   app.innerHTML = html;
   window.scrollTo(0, 0);
+  refreshUpdateBanner();
 }
 
 /* ---------- Home and profiles ---------- */
@@ -149,6 +151,7 @@ function play(id) {
   const skill = getSkill(id);
   const p = db.current();
   gen++;
+  playing = true;
   ({ choice: runChoice, balloon: runBalloon, speed: runSpeed })[skill.gameType](skill, p);
 }
 
@@ -507,8 +510,60 @@ function shake(el) {
   el.classList.add('shake');
 }
 
+/* ---------- Updates ---------- */
+// A new version downloads in the background. We wait for a tap before
+// restarting, and never show the banner in the middle of a game.
+
+let waitingWorker = null;
+const banner = document.createElement('button');
+banner.type = 'button';
+banner.className = 'update-banner';
+banner.hidden = true;
+banner.innerHTML = '<b>Update ready.</b> Tap to restart the app. Your stars and progress stay.';
+banner.onclick = () => {
+  if (!waitingWorker) return;
+  banner.disabled = true;
+  banner.innerHTML = '<b>Updating…</b>';
+  waitingWorker.postMessage('SKIP_WAITING');
+};
+document.body.prepend(banner);
+
+function refreshUpdateBanner() {
+  banner.hidden = !waitingWorker || playing;
+}
+
+function watchForUpdates(reg) {
+  const found = w => {
+    if (!w) return;
+    const ready = () => {
+      // Only an update if a version is already running (not the very first install).
+      if (w.state === 'installed' && navigator.serviceWorker.controller) {
+        waitingWorker = w;
+        refreshUpdateBanner();
+      }
+    };
+    ready();
+    w.addEventListener('statechange', ready);
+  };
+  found(reg.waiting);
+  reg.addEventListener('updatefound', () => found(reg.installing));
+
+  const check = () => reg.update().catch(() => {});
+  // Home Screen apps stay open for days, so also check whenever the app comes back.
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') check(); });
+  setInterval(check, 30 * 60 * 1000);
+}
+
 if ('serviceWorker' in navigator && location.protocol !== 'file:') {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  let reloading = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloading || !waitingWorker) return;
+    reloading = true;
+    location.reload();
+  });
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').then(watchForUpdates).catch(() => {});
+  });
 }
 
 save();
