@@ -202,6 +202,7 @@ input:focus { border-color: var(--accent); }
 .receipt { background: #fffdf5; border-radius: 16px; padding: 14px 18px; min-width: 260px; box-shadow: var(--shadow); font-weight: 700; border-top: 8px dotted #ffb703; }
 .coins { display: flex; align-items: flex-end; justify-content: center; gap: 8px; flex-wrap: wrap; }
 .coin { width: 76px; height: 76px; }
+.timeline { width: min(100%, 440px); height: auto; }
 .choices.shapes .coin { width: 96px; height: 96px; }
 .choices.coinsets .choice { min-height: 96px; padding: 10px 6px; }
 .choices.coinsets .coin { width: clamp(36px, 10vw, 56px); height: clamp(36px, 10vw, 56px); }

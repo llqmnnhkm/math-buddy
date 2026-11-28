@@ -9,6 +9,35 @@ const THINGS = ['A tree was planted', 'A school was built', 'A bridge was built'
 const opt = v => ({ html: fmtNum(v), value: v });
 const choose = (ans, wrong) => withDistractors(opt(ans), wrong.filter(x => x > 0 && Number.isInteger(x)).map(opt), 4, x => String(x.value));
 
+// 100 years as 10 blocks of 10. The first `lit` blocks are coloured, so a decade is one block and a century the whole bar.
+function timeline(lit) {
+  const blocks = Array.from({ length: 10 }, (_, i) =>
+    `<rect x="${10 + i * 30}" y="8" width="29" height="30" rx="3" fill="${i >= lit ? '#e6e9ee' : i % 2 ? '#f48c06' : '#ffb703'}"/>`);
+  const ticks = Array.from({ length: 11 }, (_, i) => `<text x="${10 + i * 30}" y="54" text-anchor="middle">${i * 10}</text>`);
+  return `<svg class="timeline" viewBox="0 0 320 72" role="img" aria-label="A time line from 0 to 100 years, in 10 blocks of 10 years">
+    ${blocks.join('')}<g font-size="11" font-weight="700" fill="#3d4650">${ticks.join('')}<text x="160" y="69" text-anchor="middle">years</text></g></svg>`;
+}
+const CENTURY = 'A century is 100 years. Think of cents: 100 sen make RM1, and 100 years make 1 century.';
+const DECADE = 'A decade is 10 years. "Dec" means 10, like the 10 digits in decimals.';
+const MEANING = [
+  () => ({ prompt: 'How many years are in 1 century?', visual: timeline(10), answer: 100, choices: choose(100, [10, 1000, 12, 50]), explanation: CENTURY }),
+  () => ({ prompt: 'How many years are in 1 decade?', visual: timeline(1), answer: 10, choices: choose(10, [100, 12, 1, 5]), explanation: DECADE }),
+  () => ({
+    prompt: 'How many decades make 1 century?',
+    visual: timeline(10),
+    answer: 10,
+    choices: choose(10, [100, 12, 5, 1000]),
+    explanation: 'Each block is 1 decade, 10 years. 10 blocks make 100 years, so 10 decades make 1 century.',
+  }),
+  ...[[100, 'century', CENTURY], [10, 'decade', DECADE]].map(([years, word, why]) => () => ({
+    prompt: `What do we call ${years} years?`,
+    visual: timeline(years / 10),
+    answer: word,
+    choices: withDistractors({ html: `1 ${word}`, value: word }, ['century', 'decade', 'year', 'month'].map(w => ({ html: `1 ${w}`, value: w })), 4, x => x.value),
+    explanation: why,
+  })),
+];
+
 export default {
   id: 'y5_time',
   mode: 'y5',
@@ -68,7 +97,9 @@ export default {
       };
     }
     if (level === 1) {
-      // One unit at a time: decades or centuries to years, and back.
+      // Half the time, learn what the words mean first, with the time line.
+      if (Math.random() < 0.5) return pick(MEANING)();
+      // Otherwise one unit at a time: decades or centuries to years, and back.
       const u = pick(UNITS);
       const other = u.years === 10 ? 100 : 10;
       const n = rand(2, 9);

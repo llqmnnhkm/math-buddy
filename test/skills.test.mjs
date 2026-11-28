@@ -29,6 +29,8 @@ const expected = {
   y5_time(q) {
     const p = q.prompt;
     let m;
+    if ((m = p.match(/^What do we call (\d+) years\?/))) return { 100: 'century', 10: 'decade' }[m[1]];
+    if (p === 'How many decades make 1 century?') return 10;
     if ((m = p.match(/^How many months are in (\d+) years\?/))) return m[1] * 12;
     if ((m = p.match(/^(\d+) years and (\d+) months?\. How many months/))) return m[1] * 12 + Number(m[2]);
     if ((m = p.match(/^How many years are in (\d+) (\w+)\?/))) return m[1] * UNIT[m[2]];
