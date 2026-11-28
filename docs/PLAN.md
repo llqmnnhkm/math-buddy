@@ -64,7 +64,7 @@ Parent corner (behind a maths gate) → progress per child, reset, delete
 Each skill is a generator: `generate(level)` returns `{ prompt, speak, visual, answer, choices, explanation }`.
 This gives endless practice without writing a question bank by hand.
 
-**Adaptive levels (1 to 3):** move up after 4 of the last 5 correct, and down after 2 wrong in a row.
+**Adaptive levels (1 to 6):** move up after 4 of the last 5 correct, and down after 2 wrong in a row. The island boss unlocks at level 3; levels 4 to 6 are extra challenge (bigger numbers, more steps) within the same age 5 and KSSR Year 5 content.
 This keeps children winning about 80% of the time.
 
 **Game types:** `choice` (tap an answer), `balloon` (tap the floating balloon), `speed` (60 second number pad round).

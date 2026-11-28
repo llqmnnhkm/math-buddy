@@ -186,7 +186,7 @@ export function tenFrames(groups, crossed = 0) {
     }
     out += `<svg class="ten-frame" viewBox="-2 -2 144 60" aria-hidden="true"><rect x="0" y="0" width="140" height="56" rx="6" fill="#fff" stroke="#8f86aa" stroke-width="3"/>${dots}</svg>`;
   }
-  return `<div class="frames">${out}</div>`;
+  return `<div class="frames${frames > 2 ? ' many' : ''}">${out}</div>`;
 }
 
 export const COUNTER_RED = '#ff5d5d';

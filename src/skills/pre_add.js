@@ -12,6 +12,45 @@ export default {
   hue: 140,
   gameType: 'choice',
   generate(level) {
+    if (level === 4) {
+      // Adding within 20 on two ten frames: fill one frame to make 10, then count on.
+      const a = rand(3, 12);
+      const b = rand(Math.max(1, 11 - a), 20 - a);
+      return {
+        prompt: `${a} red and ${b} blue. How many altogether?`,
+        visual: tenFrames([{ n: a, color: COUNTER_RED }, { n: b, color: COUNTER_BLUE }]),
+        answer: a + b,
+        choices: numChoices(a + b, 3, 2, 1),
+        choiceClass: 'big',
+        explanation: `${a} and ${b} more makes ${a + b}. A full frame is 10, then count on the rest!`,
+      };
+    }
+    if (level === 5) {
+      // Taking away within 20: the last counters are crossed out.
+      const a = rand(11, 20);
+      const b = rand(2, a - 1);
+      return {
+        prompt: `${a} dots. ${b} are crossed out. How many are left?`,
+        visual: tenFrames([{ n: a, color: COUNTER_RED }], b),
+        answer: a - b,
+        choices: numChoices(a - b, 3, 2, 0),
+        choiceClass: 'big',
+        explanation: `${a} take away ${b} leaves ${a - b}. Count the dots that are not crossed out!`,
+      };
+    }
+    if (level === 6) {
+      // Missing number: how many more to make the total.
+      const c = rand(5, 10);
+      const a = rand(1, c - 1);
+      return {
+        prompt: `${a} and how many more make ${c}?`,
+        visual: `<div class="stack"><div class="eq">${a} + ? = ${c}</div>${tenFrames([{ n: a, color: COUNTER_RED }])}</div>`,
+        answer: c - a,
+        choices: numChoices(c - a, 3, 2, 1),
+        choiceClass: 'big',
+        explanation: `Start at ${a} and count up to ${c}: ${Array.from({ length: c - a }, (_, i) => a + i + 1).join(', ')}. That is ${c - a} more!`,
+      };
+    }
     if (level === 3) {
       // Taking away within 10: some birds fly away.
       const a = rand(3, 10);

@@ -3,7 +3,7 @@ import { speak, sfx, setSound, soundOn, stopSpeech } from './audio.js';
 import { mascot, mascotSay, confetti, setOutfit, kikoSvg, OUTFITS, SLOTS } from './fx.js';
 import { skillsFor, getSkill } from './skills/index.js';
 import {
-  record, finishSession, buySticker, STICKERS, STICKER_COST, BADGES, MAX_LEVEL,
+  record, finishSession, buySticker, STICKERS, STICKER_COST, BADGES, MAX_LEVEL, BOSS_LEVEL,
   hatchEgg, eggReady, finishBoss, buyOutfit, toggleOutfit, streakNow,
 } from './engine.js';
 import { CREATURES, creature, silhouette, eggSvg, BOSSES, bossSvg } from './creatures.js';
@@ -148,7 +148,7 @@ function map() {
     <div class="island-grid">
       ${list.map(s => {
         const st = db.skill(p, s.id);
-        const bossOpen = st.level >= MAX_LEVEL || p.trophies[s.id];
+        const bossOpen = st.level >= BOSS_LEVEL || p.trophies[s.id];
         const won = p.trophies[s.id];
         return `<div class="island-wrap" style="--hue:${s.hue}">
           <button class="island" data-id="${s.id}">
@@ -161,7 +161,7 @@ function map() {
           </button>
           ${bossOpen
             ? `<button class="boss-btn" data-boss="${s.id}">${icon('sword')} ${won ? 'Rematch' : 'Boss battle!'}</button>`
-            : `<div class="boss-btn locked">${icon('lock-simple-fill')} Boss at level ${MAX_LEVEL}</div>`}
+            : `<div class="boss-btn locked">${icon('lock-simple-fill')} Boss at level ${BOSS_LEVEL}</div>`}
         </div>`;
       }).join('')}
     </div>
@@ -564,7 +564,7 @@ function hatchScreen() {
 
 // Turn any question into tap-to-answer choices, so every island can have a boss.
 function bossQuestion(skill) {
-  const q = skill.generate(MAX_LEVEL);
+  const q = skill.generate(BOSS_LEVEL);
   if (q.choices) return q;
   if (q.numbers) return { ...q, choices: q.numbers, choiceClass: 'big' };
   const spread = Math.max(3, Math.round(q.answer * 0.1));

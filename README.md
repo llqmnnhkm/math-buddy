@@ -12,7 +12,7 @@ It is an offline first PWA with no login. Progress is saved on the device, and i
 * Two modes with their own look, picked per child profile
 * 11 games: Count With Me, Pop the Balloon, Add It Up, Shape Hunt, More or Less, Corner Shop, Speed Round, Round the Rocket, Pizza Fractions, Night Market, Time Travel
 * Questions are generated on the fly, so practice never runs out
-* Adaptive levels (1 to 3): up after 4 of the last 5 correct, down after 2 wrong in a row
+* Adaptive levels (1 to 6) on every island: up after 4 of the last 5 correct, down after 2 wrong in a row
 * Read aloud for every question (Web Speech API), plus sound effects made with Web Audio (no audio files)
 * Stars, a sticker book, badges, a forgiving daily streak and confetti
 * **Mystery eggs:** every round cracks the egg; it hatches into one of 12 original creatures to collect
@@ -78,7 +78,7 @@ export default {
   icon: 'scales',           // a name from src/icons.js
   hue: 120,                 // island colour
   gameType: 'choice',       // 'choice' | 'balloon' | 'speed'
-  generate(level) {         // level is 1, 2 or 3
+  generate(level) {         // level is 1 to 6
     return {
       prompt: 'How many grams are in 3 kilograms?',
       speak: 'How many grams are in 3 kilograms?', // optional, for read aloud

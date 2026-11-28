@@ -4,7 +4,8 @@ import { STICKER_IDS } from './art.js';
 import { CREATURES } from './creatures.js';
 import { OUTFITS } from './fx.js';
 
-export const MAX_LEVEL = 3;
+export const MAX_LEVEL = 6;
+export const BOSS_LEVEL = 3; // bosses unlock here and ask questions at this level
 export const STICKER_COST = 10;
 
 export const STICKERS = STICKER_IDS;

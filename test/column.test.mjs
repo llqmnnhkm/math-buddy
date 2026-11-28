@@ -13,8 +13,8 @@ assert.deepEqual(readBoxes(['0']), { value: 0 });
 assert.deepEqual(readBoxes(['8', '0']), { value: 8 }); // a leading 0 is allowed
 
 // Long division: typing the answer's digits left to right from the start box gives the answer.
-for (let b = 2; b <= 9; b++) {
-  for (let c = 2; c <= 99; c++) {
+for (let b = 2; b <= 99; b++) { // every divisor and answer Speed Round can ask, up to level 6
+  for (let c = 2; c <= 999; c++) {
     const col = { a: b * c, b, op: 'div' };
     const n = answerBoxes(col);
     let active = startBox(col, c);

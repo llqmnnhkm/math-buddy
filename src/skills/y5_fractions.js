@@ -14,6 +14,9 @@ function pizza(n, d) {
   return `<svg viewBox="0 0 120 120" class="pizza">${slices}</svg>`;
 }
 
+// Compare fractions by value, so 2/4 never shows up as a "wrong" choice next to 1/2.
+const byValue = x => { const [n, d] = x.value.split('/'); return (n / d).toFixed(6); };
+
 // Fractions whose denominators divide 100, for percentage and decimal practice.
 const CONVERT = [
   [1, 2, 50], [1, 4, 25], [3, 4, 75], [1, 5, 20], [2, 5, 40], [3, 5, 60], [4, 5, 80],
@@ -29,6 +32,55 @@ export default {
   hue: 25,
   gameType: 'choice',
   generate(level) {
+    if (level === 4) {
+      // Different denominators, one a multiple of the other: 1/2 + 1/4 = 2/4 + 1/4.
+      const d1 = pick([2, 3, 4, 5]);
+      const k = rand(2, d1 === 2 ? 4 : 2);
+      const d = d1 * k;
+      const a = rand(1, d1 - 1);
+      const b = rand(1, d - 1 - a * k);
+      const s = a * k + b;
+      const cands = [frac(a + b, d1 + d), frac(a + b, d), frac(s + 1, d), frac(Math.max(1, s - 1), d), frac(s, d + 1)];
+      return {
+        prompt: 'Add the fractions.',
+        speak: `What is ${fracWords(a, d1)} plus ${fracWords(b, d)}?`,
+        visual: `<div class="eq">${frac(a, d1).html} + ${frac(b, d).html} = ?</div>`,
+        answer: `${s}/${d}`,
+        choices: withDistractors(frac(s, d), cands, 4, byValue),
+        explanation: `Make the denominators the same: ${frac(a, d1).html} = ${frac(a * k, d).html}. Then ${a * k} + ${b} = ${s}, so the answer is ${frac(s, d).html}.`,
+      };
+    }
+    if (level === 5) {
+      // A fraction of a quantity: 3/4 of 20.
+      const d = pick([2, 3, 4, 5, 6, 8, 10]);
+      const n = rand(1, d - 1);
+      const whole = d * rand(2, 12);
+      const ans = (whole / d) * n;
+      const opt = v => ({ html: String(v), value: v });
+      const wrong = [whole / d, whole - ans, ans + whole / d, whole * n].filter(v => v > 0 && v !== ans);
+      return {
+        prompt: `What is ${frac(n, d).html} of ${whole}?`,
+        speak: `What is ${fracWords(n, d)} of ${whole}?`,
+        answer: ans,
+        choices: withDistractors(opt(ans), wrong.map(opt), 4, x => String(x.value)),
+        explanation: `First find ${frac(1, d).html}: ${whole} ÷ ${d} = ${whole / d}. Then ${n} of those: ${whole / d} × ${n} = ${ans}.`,
+      };
+    }
+    if (level === 6) {
+      // A percentage of a quantity: 15% of 80. Quantities are multiples of 20, so answers are whole.
+      const pct = pick([5, 10, 15, 20, 25, 30, 40, 50, 60, 75]);
+      const q = rand(1, 15) * 20;
+      const ans = (pct * q) / 100;
+      const opt = v => ({ html: String(v), value: v });
+      const wrong = [q - ans, ans * 10, ans + q / 10, pct + q, ans / 10].filter(v => v > 0 && Number.isInteger(v) && v !== ans);
+      return {
+        prompt: `What is ${pct}% of ${q}?`,
+        speak: `What is ${pct} percent of ${q}?`,
+        answer: ans,
+        choices: withDistractors(opt(ans), wrong.map(opt), 4, x => String(x.value)),
+        explanation: `${pct}% means ${frac(pct, 100).html}. ${q} ÷ 100 × ${pct} = ${ans}.`,
+      };
+    }
     if (level === 1) {
       const d = pick([2, 3, 4, 5, 6, 8]);
       const n = rand(1, d - 1);

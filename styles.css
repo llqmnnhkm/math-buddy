@@ -168,6 +168,8 @@ input:focus { border-color: var(--accent); }
 .irow > span.gone { opacity: 0.35; animation: flyAway 0.9s backwards; }
 .frames { display: flex; flex-direction: column; align-items: center; gap: 10px; }
 .ten-frame { width: min(340px, 86vw); height: auto; display: block; }
+.frames.many { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+.frames.many .ten-frame { width: min(200px, 42vw); }
 .group { background: rgba(255, 255, 255, 0.6); border-radius: 18px; padding: 10px; }
 .items span.gone { opacity: 0.25; transform: translateY(-14px) rotate(-12deg); animation: none; filter: grayscale(1); }
 .sum-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
@@ -201,6 +203,9 @@ input:focus { border-color: var(--accent); }
 .coins { display: flex; align-items: flex-end; justify-content: center; gap: 8px; flex-wrap: wrap; }
 .coin { width: 76px; height: 76px; }
 .choices.shapes .coin { width: 96px; height: 96px; }
+.choices.coinsets .choice { min-height: 96px; padding: 10px 6px; }
+.choices.coinsets .coin { width: clamp(36px, 10vw, 56px); height: clamp(36px, 10vw, 56px); }
+.stack { display: grid; gap: 12px; justify-items: center; }
 .choices.groups .choice { min-height: 120px; padding: 12px 6px; }
 .choices.groups .choice:nth-child(3) { grid-column: 1 / -1; min-height: 72px; }
 .choices.groups .irow { gap: 4px; }

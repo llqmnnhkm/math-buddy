@@ -19,6 +19,14 @@ const coin = sen => {
 };
 
 const coinRow = coins => `<div class="coins">${coins.map(coin).join('')}</div>`;
+const sumOf = coins => coins.reduce((s, c) => s + c, 0);
+/** count coins from kinds, biggest first, adding up to no more than max sen. */
+function mixedCoins(count, kinds, max) {
+  let coins;
+  do coins = Array.from({ length: count }, () => pick(kinds)).sort((x, y) => y - x);
+  while (sumOf(coins) > max);
+  return coins;
+}
 const opt = v => ({ html: `${v} sen`, value: v });
 const choose = (ans, wrong) => withDistractors(opt(ans), shuffle(wrong.filter(x => x > 0)).map(opt), 4, x => String(x.value));
 
@@ -54,11 +62,38 @@ export default {
         explanation: `Count in tens: ${Array.from({ length: n }, (_, i) => (i + 1) * 10).join(', ')}. That is ${ans} sen!`,
       };
     }
-    // Two or three different coins, biggest first, total up to 50 sen.
-    let coins;
-    do coins = Array.from({ length: rand(2, 3) }, () => pick([5, 10, 20])).sort((x, y) => y - x);
-    while (coins.reduce((s, c) => s + c, 0) > 50);
-    const ans = coins.reduce((s, c) => s + c, 0);
+    if (level === 4) {
+      // Count in fives or twenties.
+      const [sen, n] = Math.random() < 0.5 ? [5, rand(2, 8)] : [20, rand(2, 5)];
+      const ans = sen * n;
+      return {
+        prompt: 'How much money is this?',
+        visual: coinRow(Array(n).fill(sen)),
+        answer: ans,
+        choices: choose(ans, [n, ans + sen, ans - sen, ans + 10]),
+        explanation: `Count in ${sen === 5 ? 'fives' : 'twenties'}: ${Array.from({ length: n }, (_, i) => (i + 1) * sen).join(', ')}. That is ${ans} sen!`,
+      };
+    }
+    if (level === 6) {
+      // Pay exactly: which set of coins makes the price?
+      const thing = pick(['sweet', 'pencil', 'eraser', 'balloon', 'apple']);
+      const sets = new Map(); // total -> coins, so every choice has a different total
+      while (sets.size < 4) {
+        const coins = mixedCoins(rand(2, 3), [5, 10, 20, 50], 100);
+        sets.set(sumOf(coins), coins);
+      }
+      const price = pick([...sets.keys()]);
+      return {
+        prompt: `A ${thing} costs ${price} sen. Tap the coins that make ${price} sen!`,
+        answer: price,
+        choices: shuffle([...sets]).map(([total, coins]) => ({ html: coinRow(coins), value: total })),
+        choiceClass: 'coinsets',
+        explanation: `Add the coins, biggest first: ${sets.get(price).join(' + ')} = ${price} sen.`,
+      };
+    }
+    // Level 3: two or three coins up to 50 sen. Level 5: three or four, with 50 sen, up to 100 sen.
+    const coins = level === 5 ? mixedCoins(rand(3, 4), [5, 10, 20, 50], 100) : mixedCoins(rand(2, 3), [5, 10, 20], 50);
+    const ans = sumOf(coins);
     return {
       prompt: 'How much money altogether?',
       visual: coinRow(coins),

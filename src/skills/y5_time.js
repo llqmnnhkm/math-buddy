@@ -1,4 +1,4 @@
-import { rand, pick, fmtNum, withDistractors } from './util.js';
+import { rand, pick, fmtNum, withDistractors, frac, fracWords } from './util.js';
 
 // Time (KSSR Year 5, topic 4): years, decades and centuries.
 const UNITS = [
@@ -18,6 +18,55 @@ export default {
   hue: 50,
   gameType: 'choice',
   generate(level) {
+    if (level === 4) {
+      // Years and months.
+      const y = rand(2, 9);
+      if (Math.random() < 0.5) {
+        return {
+          prompt: `How many months are in ${y} years?`,
+          answer: y * 12,
+          choices: choose(y * 12, [y * 10, y * 12 + 12, y * 12 - 12, y * 7]),
+          explanation: `1 year is 12 months, so ${y} years is ${y} × 12 = ${y * 12} months.`,
+        };
+      }
+      const m = rand(1, 11);
+      const ans = y * 12 + m;
+      return {
+        prompt: `${y} years and ${m} ${m === 1 ? 'month' : 'months'}. How many months is that?`,
+        answer: ans,
+        choices: choose(ans, [y * 10 + m, y + m, ans + 12, ans - 12]),
+        explanation: `${y} years = ${y} × 12 = ${y * 12} months. Add ${m} more: ${ans} months.`,
+      };
+    }
+    if (level === 5) {
+      // Fractions of a century or decade: 3/4 of a century is 75 years.
+      const century = Math.random() < 0.7;
+      const [n, d] = pick(century ? [[1, 2], [1, 4], [3, 4], [1, 5], [2, 5], [3, 5], [4, 5], [1, 10], [7, 10]] : [[1, 2], [1, 5], [2, 5], [3, 5], [4, 5]]);
+      const size = century ? 100 : 10;
+      const ans = (size / d) * n;
+      const unit = century ? 'century' : 'decade';
+      return {
+        prompt: `What is ${frac(n, d).html} of a ${unit} in years?`,
+        speak: `What is ${fracWords(n, d)} of a ${unit} in years?`,
+        answer: ans,
+        choices: choose(ans, [size / d, ans * 10, size - ans, (100 / size) * ans, ans + size / d]),
+        explanation: `1 ${unit} is ${size} years. ${size} ÷ ${d} = ${size / d}, and ${n} × ${size / d} = ${ans} years.`,
+      };
+    }
+    if (level === 6) {
+      // Two steps: change both ages to years, then subtract.
+      const age = () => [rand(1, 4), rand(1, 9)];
+      let [a, b] = [age(), age()];
+      while (a[0] * 100 + a[1] * 10 <= b[0] * 100 + b[1] * 10) [a, b] = [age(), age()];
+      const [ya, yb] = [a[0] * 100 + a[1] * 10, b[0] * 100 + b[1] * 10];
+      const say = ([c, d]) => `${c} ${c === 1 ? 'century' : 'centuries'} ${d} ${d === 1 ? 'decade' : 'decades'}`;
+      return {
+        prompt: `A temple is ${say(a)} old. A clock tower is ${say(b)} old. How many years older is the temple?`,
+        answer: ya - yb,
+        choices: choose(ya - yb, [ya + yb, (a[0] - b[0]) * 100 + Math.abs(a[1] - b[1]) * 10, ya - yb + 10, ya - yb - 10]),
+        explanation: `The temple is ${ya} years old and the clock tower is ${yb} years old. ${ya} − ${yb} = ${ya - yb} years.`,
+      };
+    }
     if (level === 1) {
       // One unit at a time: decades or centuries to years, and back.
       const u = pick(UNITS);
