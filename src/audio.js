@@ -26,7 +26,9 @@ export function stopSpeech() { if (hasSpeech) speechSynthesis.cancel(); }
 export function speak(text) {
   if (!on || !hasSpeech || !text) return;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(String(text).replace(/<[^>]+>/g, ' '));
+  // Tags become spaces (so stacked fractions read "3 4", not "34"), then &amp; &#39; etc. become plain characters.
+  const plain = new DOMParser().parseFromString(String(text).replace(/<[^>]+>/g, ' '), 'text/html').body.textContent;
+  const u = new SpeechSynthesisUtterance(plain);
   u.lang = voice?.lang || 'en-GB'; // always English, even if the device language is Malay
   if (voice) u.voice = voice;
   u.rate = 0.9;

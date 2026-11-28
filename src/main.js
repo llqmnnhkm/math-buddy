@@ -1,10 +1,10 @@
-import { db, save, upgradeProfile } from './db.js';
+import { db, save, upgradeProfile, readBackup } from './db.js';
 import { speak, sfx, setSound, soundOn, stopSpeech } from './audio.js';
 import { mascot, mascotSay, confetti, setOutfit, kikoSvg, OUTFITS, SLOTS } from './fx.js';
 import { skillsFor, getSkill } from './skills/index.js';
 import {
   record, finishSession, buySticker, STICKERS, STICKER_COST, BADGES, MAX_LEVEL,
-  hatchEgg, eggReady, finishBoss, buyOutfit, toggleOutfit,
+  hatchEgg, eggReady, finishBoss, buyOutfit, toggleOutfit, streakNow,
 } from './engine.js';
 import { CREATURES, creature, silhouette, eggSvg, BOSSES, bossSvg } from './creatures.js';
 import { numChoices, fmtNum } from './skills/util.js';
@@ -122,7 +122,7 @@ function topbar(p, extra = '') {
     <button class="icon-btn" id="home" aria-label="Home">${icon('house')}</button>
     <div class="who"><span class="mini-av">${animal(p.avatar)}</span>${esc(p.name)}</div>
     <div class="pill" title="Stars">${STAR} ${p.stars}</div>
-    <div class="pill" title="Day streak">${FIRE} ${p.streak.count}</div>
+    <div class="pill" title="Day streak">${FIRE} ${streakNow(p)}</div>
     ${extra}
   </header>`;
 }
@@ -809,7 +809,7 @@ function parentCard(p) {
       <span class="avatar">${animal(p.avatar)}</span>
       <div class="pinfo"><b>${esc(p.name)}</b><small>${modeName}</small></div>
       <div class="pill">${STAR} ${p.stars}</div>
-      <div class="pill">${FIRE} ${p.streak.count}</div>
+      <div class="pill">${FIRE} ${streakNow(p)}</div>
     </div>
     <p class="summary">This week: ${week.length} ${week.length === 1 ? 'round' : 'rounds'}, ${weekStars} stars earned.${weak ? ` Needs more practice: <b>${weak.sk.name}</b>.` : ''}</p>
     ${played.length ? `<div class="table-wrap"><table>
@@ -838,10 +838,44 @@ function parent() {
   </header>
   <div class="screen parent">
     ${ps.length ? ps.map(parentCard).join('') : '<p class="muted">No players yet.</p>'}
-    <p class="muted note">Progress is saved on this device only. Read aloud uses your device's built in English voice.</p>
+    <div class="card pcard">
+      <h2>Backup</h2>
+      <p class="summary">Progress is saved on this device only. Clearing the browser or changing phones loses it, so save a backup file now and then.</p>
+      <div class="row">
+        <button class="btn small" id="backup" ${ps.length ? '' : 'disabled'}>Save a backup</button>
+        <button class="btn small alt" id="restoreBtn">Restore a backup</button>
+        <input type="file" id="restore" accept=".json,application/json" hidden>
+      </div>
+      <p class="muted" id="backupMsg" role="status"></p>
+    </div>
+    <p class="muted note">Read aloud uses your device's built in English voice.</p>
   </div>`);
   $('#home').onclick = home;
   $('#sound').onclick = () => { setSound(!soundOn()); parent(); };
+  $('#backup').onclick = () => {
+    const url = URL.createObjectURL(new Blob([db.backup()], { type: 'application/json' }));
+    const day = new Date().toISOString().slice(0, 10);
+    Object.assign(document.createElement('a'), { href: url, download: `math-buddy-backup-${day}.json` }).click();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+    $('#backupMsg').textContent = 'Backup saved to your downloads.';
+  };
+  $('#restoreBtn').onclick = () => $('#restore').click();
+  $('#restore').onchange = async e => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    let profiles;
+    try { profiles = readBackup(await file.text()); } catch (err) { $('#backupMsg').textContent = err.message; return; }
+    const n = profiles.length;
+    confirmTwice({
+      title1: 'Restore this backup?',
+      body1: `The backup has ${n} ${n === 1 ? 'player' : 'players'}. It replaces every player on this device.`,
+      title2: 'Are you sure?',
+      body2: "Players on this device that aren't in the backup will be lost.",
+      yes: 'Yes, restore',
+      onConfirm: () => { db.restore(profiles); location.reload(); }, // reload runs the startup upgrade on restored players
+    });
+  };
   $$('[data-act]').forEach(b => b.onclick = () => {
     const p = db.profiles.find(x => x.id === b.dataset.id);
     if (!p) return;
@@ -957,4 +991,6 @@ db.profiles.forEach(p => {
 });
 
 save();
+// Ask the browser not to clear saved progress when space runs low (Chrome/Android honour it).
+if (db.profiles.length) navigator.storage?.persist?.().catch(() => {});
 home();

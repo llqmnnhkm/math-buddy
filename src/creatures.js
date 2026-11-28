@@ -126,6 +126,9 @@ export const BOSSES = {
   y5_rounding: { name: 'Round Rex', color: '#3fa7e0', body: 'round', eyes: 2, top: 'spikes', mouth: 'teeth' },
   y5_fractions: { name: 'Slice Lord', color: '#f08a3c', body: 'blob', eyes: 2, top: 'horns', mouth: 'teeth' },
   y5_money: { name: 'Coin Crusher', color: '#2fb39a', body: 'pear', eyes: 3, top: 'horns', mouth: 'teeth' },
+  pre_compare: { name: 'Greedy Gus', color: '#b06fe0', body: 'blob', eyes: 2, top: 'tuft', mouth: 'teeth' },
+  pre_coins: { name: 'Sen Snatcher', color: '#e0a83a', body: 'round', eyes: 2, top: 'antenna', mouth: 'teeth' },
+  y5_time: { name: 'Tick Tyrant', color: '#d9534f', body: 'tall', eyes: 1, top: 'spikes', mouth: 'teeth' },
 };
 
 export const bossSvg = skillId => {

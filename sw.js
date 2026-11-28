@@ -1,7 +1,7 @@
 // Offline support: cache the app shell, serve from cache first.
 // Bump VERSION whenever you change any file. Phones then download the new
 // version in the background and show "Update ready. Tap to restart".
-const VERSION = 'mathbuddy-v9';
+const VERSION = 'mathbuddy-v10';
 const FILES = [
   './', './index.html', './styles.css', './manifest.json',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
@@ -9,6 +9,7 @@ const FILES = [
   './src/icons.js', './src/art.js', './src/creatures.js', './src/column.js', './src/skills/index.js', './src/skills/util.js',
   './src/skills/pre_count.js', './src/skills/pre_balloon.js', './src/skills/pre_add.js', './src/skills/pre_shapes.js',
   './src/skills/y5_speed.js', './src/skills/y5_fractions.js', './src/skills/y5_rounding.js', './src/skills/y5_money.js',
+  './src/skills/pre_compare.js', './src/skills/pre_coins.js', './src/skills/y5_time.js',
 ];
 
 self.addEventListener('install', e => {

@@ -58,18 +58,19 @@ export function record(p, skillId, correct) {
 const dayKey = d => `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
 const fromKey = k => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
 
+const daysSince = key => Math.round((fromKey(dayKey(new Date())) - fromKey(key)) / 864e5);
+const STREAK_GAP = 2; // forgiving: one missed day keeps the streak going
+
 function updateStreak(p) {
-  const today = new Date();
-  const key = dayKey(today);
+  const key = dayKey(new Date());
   const st = p.streak;
   if (!st.last) { st.count = 1; }
-  else if (st.last !== key) {
-    const gap = Math.round((fromKey(key) - fromKey(st.last)) / 864e5);
-    // Forgiving: one missed day keeps the streak going.
-    st.count = gap <= 2 ? st.count + 1 : 1;
-  }
+  else if (st.last !== key) st.count = daysSince(st.last) <= STREAK_GAP ? st.count + 1 : 1;
   st.last = key;
 }
+
+/** Streak to show: 0 once it has lapsed, even before the next round resets it. */
+export const streakNow = p => (p.streak.last && daysSince(p.streak.last) <= STREAK_GAP ? p.streak.count : 0);
 
 function checkBadges(p, r) {
   const earned = [];

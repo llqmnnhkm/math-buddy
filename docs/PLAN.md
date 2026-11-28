@@ -42,9 +42,9 @@ Parent corner (behind a maths gate) → progress per child, reset, delete
 | Shapes: circle, square, triangle, rectangle (Shape Hunt) | ✅ Done |
 | Matching and sorting | Planned |
 | Patterns (Pattern Train) | Planned |
-| More, less, same | Planned |
+| More, less, same (More or Less) | ✅ Done |
 | Comparing length and weight | Planned |
-| Malaysian coins (Corner Shop) | Planned |
+| Malaysian coins (Corner Shop) | ✅ Done |
 
 ### Standard 5 (KSSR Year 5)
 
@@ -53,7 +53,7 @@ Parent corner (behind a maths gate) → progress per child, reset, delete
 | 1. Whole numbers and operations | Speed Round, Round the Rocket | ✅ Done |
 | 2. Fractions, decimals and percentages | Pizza Fractions | ✅ Done |
 | 3. Money | Night Market | ✅ Done |
-| 4. Time | Time Travel (decades, centuries) | Planned |
+| 4. Time | Time Travel (decades, centuries) | ✅ Done |
 | 5. Measurement (length, mass, volume) | Planned | Planned |
 | 6. Space (angles, polygons, perimeter, area, volume) | Planned | Planned |
 | 7. Coordinates, ratio and proportion | Treasure Map | Planned |
@@ -94,9 +94,9 @@ current: active profile id
 
 1. ✅ Core: profiles, modes, map, adaptive engine, rewards, PWA
 2. ✅ First 4 games per mode
-3. Remaining Little Learners skills (patterns, sorting, coins, comparing)
-4. Remaining Standard 5 topics (time, measurement, space, coordinates, data)
-5. More game types: drag and drop, Pattern Train, Treasure Map grid, Boss Battle
+3. Remaining Little Learners skills (patterns, sorting, comparing length and weight)
+4. Remaining Standard 5 topics (measurement, space, coordinates, data)
+5. More game types: drag and drop, Pattern Train, Treasure Map grid
 6. ✅ Mystery eggs, combo meter, boss battles, Kiko's Closet
 7. 2 player "Race a parent" mode
 8. Optional Laravel + Filament backend for accounts and sync
