@@ -37,6 +37,8 @@ const MEANING = [
     explanation: why,
   })),
 ];
+// shortcut: the place in MEANING is kept per page load, not per child; fine while one child plays at a time.
+let nextMeaning = 0;
 
 export default {
   id: 'y5_time',
@@ -96,10 +98,10 @@ export default {
         explanation: `The temple is ${ya} years old and the clock tower is ${yb} years old. ${ya} − ${yb} = ${ya - yb} years.`,
       };
     }
-    if (level === 1) {
-      // Half the time, learn what the words mean first, with the time line.
-      if (Math.random() < 0.5) return pick(MEANING)();
-      // Otherwise one unit at a time: decades or centuries to years, and back.
+    // Level 1: learn what a decade and a century mean, with the time line, in order.
+    if (level === 1) return MEANING[nextMeaning++ % MEANING.length]();
+    if (level === 2 && Math.random() < 0.5) {
+      // One unit at a time: decades or centuries to years, and back.
       const u = pick(UNITS);
       const other = u.years === 10 ? 100 : 10;
       const n = rand(2, 9);
@@ -120,7 +122,7 @@ export default {
       };
     }
     if (level === 2) {
-      // Mixed units to years: 2 centuries 3 decades, or 4 decades 6 years.
+      // Or mixed units to years: 2 centuries 3 decades, or 4 decades 6 years.
       const big = Math.random() < 0.5;
       const a = rand(1, 9), b = rand(1, 9);
       const [ua, ub, sa, sb] = big ? ['century', 'decade', 100, 10] : ['decade', 'year', 10, 1];
