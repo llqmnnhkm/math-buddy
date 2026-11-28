@@ -15,6 +15,12 @@ export function answerBoxes({ a, b, op }) {
   return la; // subtraction and division never need more places than the first number
 }
 
+/**
+ * Box where typing starts. + − × start at the ones. Long division fills left to right from
+ * the box over the answer's first digit; the boxes before it stay empty, as on paper.
+ */
+export const startBox = ({ op }, answer) => (op === 'div' ? String(answer).length - 1 : 0);
+
 /** Columns have a little extra room on the left where a thousands space would go. */
 const template = n => Array.from({ length: n }, (_, i) => {
   const r = n - 1 - i; // place value of this column (0 = ones)
@@ -60,6 +66,17 @@ export function columnForm({ a, b, op }, { interactive = false } = {}) {
     ${boxCells(n, 4, colOf, interactive)}
     <span class="col-line double" style="grid-row:5;grid-column:1 / -1"></span>
   </div>`;
+}
+
+/**
+ * Read the typed boxes (vals[0] = ones). null if nothing is typed, { gap: r } if box r is
+ * empty between two digits, otherwise { value }. Empty boxes outside the digits count as nothing.
+ */
+export function readBoxes(vals) {
+  const filled = vals.map((v, r) => (v !== undefined ? r : -1)).filter(r => r >= 0);
+  if (!filled.length) return null;
+  for (let r = Math.min(...filled); r <= Math.max(...filled); r++) if (vals[r] === undefined) return { gap: r };
+  return { value: vals.reduce((sum, v, r) => sum + (v ? Number(v) * 10 ** r : 0), 0) };
 }
 
 /** Show a number in the boxes by place value (used to reveal the right answer). */

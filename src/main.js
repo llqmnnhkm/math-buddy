@@ -8,7 +8,7 @@ import {
 } from './engine.js';
 import { CREATURES, creature, silhouette, eggSvg, BOSSES, bossSvg } from './creatures.js';
 import { numChoices, fmtNum } from './skills/util.js';
-import { columnForm, answerBoxes, fillBoxes } from './column.js';
+import { columnForm, answerBoxes, fillBoxes, readBoxes, startBox } from './column.js';
 import { icon } from './icons.js';
 import { animal, ANIMAL_IDS, sticker } from './art.js';
 
@@ -387,9 +387,9 @@ function runSpeed(skill, p) {
     qEl.innerHTML = columnForm(q.col, { interactive: true });
     boxes = answerBoxes(q.col);
     vals = [];
-    // Column method: + − × start at the ones and move left. Long division starts on the left.
+    // Column method: + − × move left from the ones. Long division fills left to right.
     rtl = q.col.op !== 'div';
-    active = rtl ? 0 : boxes - 1;
+    active = startBox(q.col, q.answer);
     qEl.querySelectorAll('.box').forEach(box => box.onclick = () => {
       if (!running || lock) return;
       active = +box.dataset.r;
@@ -399,22 +399,19 @@ function runSpeed(skill, p) {
     $('#note').textContent = '';
     render();
   };
-  const typed = () => vals.some(v => v !== undefined);
   const submit = () => {
-    if (!running || lock || !typed()) return;
-    const filled = vals.map((v, r) => (v !== undefined ? r : -1)).filter(r => r >= 0);
-    const hi = Math.max(...filled), lo = Math.min(...filled);
+    if (!running || lock) return;
+    const read = readBoxes(vals);
+    if (!read) return;
     // A gap between digits is easy to miss, so ask for a 0 instead of marking it wrong.
-    for (let r = lo; r <= hi; r++) {
-      if (vals[r] === undefined && r !== 0) {
-        $('#note').innerHTML = 'Fill the empty box between your digits. Use <b>0</b> if needed.';
-        sfx('wrong');
-        active = r;
-        render();
-        return;
-      }
+    if (read.gap !== undefined) {
+      $('#note').innerHTML = 'Fill the empty box between your digits. Use <b>0</b> if needed.';
+      sfx('wrong');
+      active = read.gap;
+      render();
+      return;
     }
-    const value = vals.reduce((sum, v, r) => sum + (v ? Number(v) * 10 ** r : 0), 0);
+    const { value } = read;
     const ok = value === q.answer;
     record(p, skill.id, ok);
     combo.hit(ok);

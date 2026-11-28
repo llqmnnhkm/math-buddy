@@ -34,6 +34,8 @@ python3 -m http.server 8000
 
 Opening `index.html` directly from disk will not work, because ES modules need a server.
 
+The answer box test runs with `node test/column.test.mjs` (Node 22 or newer). No output means it passed.
+
 ## Deploy to GitHub Pages
 
 1. Push to GitHub.
